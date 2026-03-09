@@ -23,6 +23,7 @@ You MUST select URLs ONLY from the client's provided target pages below.
 - Do NOT link to the client's homepage unless it is the only relevant match
 - Do NOT use glossary pages or glossary-style sources
 - Do NOT use external sites (gov, edu, etc.)
+- Do NOT place links inside H1, H2, or H3 heading tags — links must only appear in body paragraph text
 
 ## STRICT OUTPUT REQUIREMENTS (MANDATORY)
 - Return ONLY a raw JSON array with exactly TWO items

@@ -1,5 +1,5 @@
-# Collaboration Workflow
-*This section is for the full team — no technical background required to follow this process.*
+# Meerkat Updates Workflow
+*This section is for the full team, no technical expertise required to manage.*
 
 ---
 
@@ -30,7 +30,7 @@ Label it appropriately (`prompt-change`, `bug`, `needs-review`, etc.) so it's ea
 
 ### Step 2 — Developer makes the change on a branch
 
-The developer (Eli) picks up the Issue and makes the edit on a **branch** — a separate copy of the codebase that doesn't affect the live pipeline.
+The developer picks up the Issue and makes the edit on a **branch**, a separate copy of the codebase that doesn't affect the live pipeline.
 
 Branch names follow this format:
 ```
@@ -48,7 +48,7 @@ When the change is ready, a **Pull Request (PR)** is opened. A PR is a page on G
 - A plain-English description of what changed and why (filled in via our PR template)
 - Which Issue it closes
 
-Patrick or any designated reviewer gets notified by email.
+Designated reviewer(s) gets notified by email.
 
 **You don't need to read the code.** Read the description, check the "Expected impact" and "How to verify" fields, and either approve or leave a comment.
 

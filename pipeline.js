@@ -8,7 +8,6 @@ const { insertLinks } = require('./lib/insert-links');
 const { applyCompliance } = require('./lib/apply-compliance');
 const { scoreArticle } = require('./lib/scoring');
 const { upsertArticle } = require('./lib/supabase');
-const { uploadToDrive } = require('./lib/drive-upload');
 const { publishArticle } = require('./lib/github-publish');
 
 const client = new Anthropic();
@@ -250,23 +249,7 @@ async function runPipeline(payload) {
     console.error('[Pipeline] Supabase upsert failed:', err.message);
   }
 
-  // ─── 10. Upload HTML preview to Google Drive ──────────────────────────────
-  try {
-    await uploadToDrive({
-      clientName,
-      keyword,
-      articleId,
-      fleschScore: scores.fleschScore,
-      wordCount: scores.wordCount,
-      pageUrl: slugData.pageUrl,
-      supabaseError,
-      htmlContent: cleanedContent
-    });
-  } catch (err) {
-    console.error('[Pipeline] Drive upload failed:', err.message);
-  }
-
-  // ─── 11. Publish to internal.goconstellation.com ──────────────────────────
+  // ─── 10. Publish to internal.goconstellation.com ─────────────────────────
   let publishedUrl = null;
   try {
     publishedUrl = await publishArticle({

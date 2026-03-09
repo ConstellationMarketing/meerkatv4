@@ -10,7 +10,7 @@ Most recent changes appear at the top. Each entry links to the Pull Request for 
 
 ---
 
-## March 9, 2026 — Initial Build (Patrick Carver)
+## March 9, 2026 — Initial Build
 
 - Launched Meerkat v4 as a parallel Claude Code-based pipeline running alongside the existing n8n workflow
 - Sections generated in parallel via Claude Sonnet with Flesch readability scoring and auto-retry

@@ -9,6 +9,7 @@ const { applyCompliance } = require('./lib/apply-compliance');
 const { scoreArticle } = require('./lib/scoring');
 const { upsertArticle } = require('./lib/supabase');
 const { uploadToDrive } = require('./lib/drive-upload');
+const { publishArticle } = require('./lib/github-publish');
 
 const client = new Anthropic();
 
@@ -265,6 +266,24 @@ async function runPipeline(payload) {
     console.error('[Pipeline] Drive upload failed:', err.message);
   }
 
+  // ─── 11. Publish to internal.goconstellation.com ──────────────────────────
+  let publishedUrl = null;
+  try {
+    publishedUrl = await publishArticle({
+      articleId,
+      clientName,
+      keyword,
+      slug: slugData.urlSlug || articleId,
+      htmlContent: cleanedContent,
+      fleschScore: scores.fleschScore,
+      wordCount: scores.wordCount,
+      pageUrl: slugData.pageUrl,
+      userId
+    });
+  } catch (err) {
+    console.error('[Pipeline] Publish failed:', err.message);
+  }
+
   return {
     articleId,
     keyword,
@@ -273,6 +292,7 @@ async function runPipeline(payload) {
     pageUrl: slugData.pageUrl,
     urlSlug: slugData.urlSlug,
     supabaseError,
+    publishedUrl,
     table: process.env.SUPABASE_TABLE || 'article_outlines_test'
   };
 }

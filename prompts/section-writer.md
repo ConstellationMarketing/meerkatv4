@@ -44,6 +44,12 @@ Background Information: {{clientInfo}}
 - "Due to the fact that" → "because"
 - "At this point in time" → "now"
 
+## FAQ Constraints
+- FAQ sections must not exceed 25% of the total article word count
+- FAQ must contain a maximum of 5 questions
+- Every FAQ question must be derived from topics already covered in the article body — introduce no new subjects
+- FAQ answers must be concise — 2-4 sentences maximum per answer
+
 --
 Consider the following:
 

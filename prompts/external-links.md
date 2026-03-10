@@ -86,6 +86,7 @@ https://www.copyright.gov/help/faq/online-content/
 - Do NOT use Justia.com
 - Do NOT use law.cornell.edu
 - Do NOT use blogs, news sites, private law firm pages, or aggregators
+- Do NOT place links inside H1, H2, or H3 heading tags — links must only appear in body paragraph text
 
 ## STRICT OUTPUT REQUIREMENTS (MANDATORY)
 - Return ONLY a raw JSON array with exactly ONE item

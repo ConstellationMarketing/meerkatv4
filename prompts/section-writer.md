@@ -10,6 +10,12 @@ Background Information: {{clientInfo}}
 
 **Target Flesch Reading Ease: 60-75**
 
+## Heading Structure
+- The article must contain exactly ONE H1 tag — never more
+- All primary sections must use H2 tags
+- Subsections must use H3 tags
+- Never use H1 more than once regardless of section or context
+
 ### Word Choice
 - Prefer one-syllable words when the meaning is the same: "help" not "assist," "show" not "demonstrate," "use" not "utilize," "get" not "obtain," "find" not "identify"
 - Replace "immediately" with "right away" or "now"

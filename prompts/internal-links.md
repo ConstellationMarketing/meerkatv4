@@ -20,7 +20,7 @@ You MUST select URLs ONLY from the client's provided target pages below.
 {{internalUrls}}
 
 ## EXCLUSIONS (ABSOLUTE)
-- Do NOT link to the client's homepage unless it is the only relevant match
+- Prioritize linking to the client's homepage, contact page, and parent practice area page when they are present in the URL pool
 - Do NOT use glossary pages or glossary-style sources
 - Do NOT use external sites (gov, edu, etc.)
 - Do NOT place links inside H1, H2, or H3 heading tags — links must only appear in body paragraph text

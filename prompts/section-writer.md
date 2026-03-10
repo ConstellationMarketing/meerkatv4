@@ -66,7 +66,15 @@ Never omit any of these sections regardless of keyword or article type.
 - Taglines must be 7 words or fewer
 - The tagline must never restate or paraphrase the H1 heading
 - Taglines must be punchy and distinct — a fresh angle, not a summary
-- 
+
+## Legal Language Requirements
+- Never make definitive legal conclusions — avoid "you will win", "you are entitled to", "this is illegal", "guaranteed outcome"
+- Always use qualified language: "may", "in some cases", "depending on your jurisdiction", "results vary"
+- Never cite statistics, studies, or data without a named, verifiable source
+- Never state case outcomes as guaranteed — legal results always depend on individual circumstances
+- Do not claim specialization — use "focuses on" never "specializes in"
+- Avoid outcome promises — use effort-based language: "we work toward the best possible outcome"
+
 --
 Consider the following:
 

@@ -180,9 +180,11 @@ async function runPipeline(payload) {
   let titleMeta = { titleTag: '', description: '' };
   try { titleMeta = parseJSON(titleMetaRaw); } catch (e) { console.error('Parse title/meta failed:', e.message); }
 
-  const seoHeader = `\n<div class="seo-header">\n  <h1>${titleMeta.titleTag}</h1>\n  <p class="meta-description">${titleMeta.description}</p>\n</div>\n`;
-  const fullContent = seoHeader + linkedHTML;
-
+  // const seoHeader = `\n<div class="seo-header">\n  <h1>${titleMeta.titleTag}</h1>\n  <p class="meta-description">${titleMeta.description}</p>\n</div>\n`;
+  // const fullContent = seoHeader + linkedHTML;
+  //03.10.2026 replaced variables with below to prevent margin bleed
+  const fullContent = linkedHTML;
+  
   // ─── 6. Legal ethics compliance ───────────────────────────────────────────
   console.log('[Pipeline] Running legal compliance check...');
   let complianceResult = { violations: [], total: 0, categories: [] };
@@ -237,7 +239,9 @@ async function runPipeline(payload) {
     'Page URL': slugData.pageUrl,
     'URL Slug': slugData.urlSlug,
     user_id: userId,
-    'cleaned content': cleanedContent
+    'cleaned content': cleanedContent,
+    title_tag: titleMeta.titleTag, //added 3.10.2026
+    meta_description: titleMeta.description //added 3.10.2026
   };
 
   let supabaseError = null;

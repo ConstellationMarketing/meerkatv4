@@ -10,6 +10,12 @@ Background Information: {{clientInfo}}
 
 **Target Flesch Reading Ease: 60-75**
 
+## Heading Structure
+- The article must contain exactly ONE H1 tag — never more
+- All primary sections must use H2 tags
+- Subsections must use H3 tags
+- Never use H1 more than once regardless of section or context
+
 ### Word Choice
 - Prefer one-syllable words when the meaning is the same: "help" not "assist," "show" not "demonstrate," "use" not "utilize," "get" not "obtain," "find" not "identify"
 - Replace "immediately" with "right away" or "now"
@@ -49,6 +55,36 @@ Background Information: {{clientInfo}}
 - FAQ must contain a maximum of 5 questions
 - Every FAQ question must be derived from topics already covered in the article body — introduce no new subjects
 - FAQ answers must be concise — 2-4 sentences maximum per answer
+## Required Section Template
+Every article must include ALL of the following sections in this order:
+1. Introduction (200–300 words, keyword-natural, professional tone)
+2. Legal Overview (explain the relevant law or legal context)
+3. Why Choose Us (trust signals only: credentials, experience, results — NOT service descriptions)
+4. What to Expect (the legal process, steps, and timelines — NOT firm services)
+5. CTA (dedicated heading, clear call to action, brief explanation of legal support available)
+6. FAQ (derived from article body, capped at 25% of word count, max 5 questions)
+
+Never omit any of these sections regardless of keyword or article type.
+
+## Anti-Repetition Rules
+- Each section must introduce new information not covered in any previous section
+- Never restate points, arguments, or facts already made in an earlier section
+- Before writing a section, assume all previous sections have already been written — your section must add value beyond what came before
+- If a concept was introduced in the Introduction, do not reintroduce it in body sections — build on it instead
+- Varied phrasing of the same idea still counts as repetition and must be avoided
+
+## Tagline Rules
+- Taglines must be 7 words or fewer
+- The tagline must never restate or paraphrase the H1 heading
+- Taglines must be punchy and distinct — a fresh angle, not a summary
+
+## Legal Language Requirements
+- Never make definitive legal conclusions — avoid "you will win", "you are entitled to", "this is illegal", "guaranteed outcome"
+- Always use qualified language: "may", "in some cases", "depending on your jurisdiction", "results vary"
+- Never cite statistics, studies, or data without a named, verifiable source
+- Never state case outcomes as guaranteed — legal results always depend on individual circumstances
+- Do not claim specialization — use "focuses on" never "specializes in"
+- Avoid outcome promises — use effort-based language: "we work toward the best possible outcome"
 
 --
 Consider the following:

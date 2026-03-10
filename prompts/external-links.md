@@ -80,8 +80,10 @@ https://leginfo.legislature.ca.gov/faces/codes.xhtml
 https://iga.in.gov/legislative/laws/
 https://malegislature.gov/Laws/GeneralLaws
 https://www.copyright.gov/help/faq/online-content/
+https://www.legis.ga.gov/laws/en-US/Code
 
 ## EXCLUSIONS (ABSOLUTE)
+- Do NOT select a URL from the approved pool unless it is genuinely relevant to the article's specific practice area and jurisdiction — do not default to a generic federal source when a state-specific statute is more appropriate
 - Do NOT use glossary pages or glossary-style sources
 - Do NOT use Justia.com
 - Do NOT use law.cornell.edu

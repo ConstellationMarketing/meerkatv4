@@ -15,7 +15,7 @@ const client = new Anthropic();
 // Load prompts at startup
 const PROMPTS_DIR = path.join(__dirname, 'prompts');
 const prompts = {};
-['section-writer', 'external-links', 'internal-links', 'title-meta', 'legal-compliance', 'schema-generator', 'slug-url'].forEach(name => {
+['section-writer', 'external-links', 'internal-links', 'title-meta', 'legal-compliance', 'schema-generator', 'slug-url', 'article-review'].forEach(name => {
   prompts[name] = fs.readFileSync(path.join(PROMPTS_DIR, `${name}.md`), 'utf8');
 });
 
@@ -46,14 +46,73 @@ async function callClaude(systemPrompt, userPrompt, model = 'claude-haiku-4-5-20
   return msg.content[0].text.trim();
 }
 
-// Parse JSON from Claude output (strips code fences if present)
+// Parse JSON from Claude output (strips code fences and leading prose if present)
 function parseJSON(raw) {
-  const cleaned = raw
+  let cleaned = raw
     .replace(/^```json\s*/i, '')
     .replace(/^```\s*/i, '')
     .replace(/```$/i, '')
     .trim();
+
+  // If response starts with prose instead of JSON, try to extract JSON
+  if (!cleaned.startsWith('{') && !cleaned.startsWith('[')) {
+    const jsonStart = cleaned.search(/[\[{]/);
+    if (jsonStart !== -1) {
+      cleaned = cleaned.slice(jsonStart);
+    }
+  }
+
   return JSON.parse(cleaned);
+}
+
+// Post-processing: enforce single H1 — strip all but the first, or promote first H2
+function enforceSingleH1(html) {
+  const h1Count = (html.match(/<h1>/gi) || []).length;
+
+  if (h1Count === 0) {
+    // No H1 found — promote the first H2 to H1
+    let promoted = false;
+    html = html.replace(/<h2>([\s\S]*?)<\/h2>/i, (match, content) => {
+      if (!promoted) {
+        promoted = true;
+        return `<h1>${content}</h1>`;
+      }
+      return match;
+    });
+  } else if (h1Count > 1) {
+    // Multiple H1s — keep first, demote rest to H2
+    let foundFirst = false;
+    html = html.replace(/<h1>([\s\S]*?)<\/h1>/gi, (match) => {
+      if (!foundFirst) {
+        foundFirst = true;
+        return match;
+      }
+      return match.replace(/<h1>/i, '<h2>').replace(/<\/h1>/i, '</h2>');
+    });
+  }
+
+  return html;
+}
+
+// Post-processing: replace bracketed placeholders with client name or fallback
+function stripPlaceholders(html, clientName) {
+  const fallback = clientName || 'our firm';
+  return html
+    .replace(/\[Firm [Nn]ame\]/g, fallback)
+    .replace(/\[firm name\]/gi, fallback)
+    .replace(/\[Attorney [Nn]ame\]/g, fallback)
+    .replace(/\[City\]/gi, '')
+    .replace(/\[State\]/gi, '')
+    .replace(/\[Phone\]/gi, '')
+    .replace(/\[Contact\]/gi, '');
+}
+
+// Post-processing: remove links from inside heading tags
+function stripLinksFromHeadings(html) {
+  return html.replace(/<(h[1-3])>([\s\S]*?)<\/\1>/gi, (match, tag, content) => {
+    const cleaned = content.replace(/<a\s[^>]*>([\s\S]*?)<\/a>/gi, '$1');
+    return `<${tag}>${cleaned}</${tag}>`;
+  });
 }
 
 // Generate one section with QC retry loop
@@ -65,6 +124,7 @@ async function generateSection(payload, section) {
     website: payload.website,
     clientInfo: payload.clientInfo,
     articleId: payload.articleId,
+    template: payload.template || 'practice',
     sectionNumber: section.sectionNumber,
     details: section.details,
     wordCount: section.wordCount
@@ -130,7 +190,7 @@ async function runPipeline(payload) {
   console.log(`[Pipeline] Generating ${sections.length} sections in parallel...`);
   const sectionResults = await Promise.all(
     sections.map(section =>
-      generateSection({ articleId, clientId, clientName, clientInfo, website, keyword }, section)
+      generateSection({ articleId, clientId, clientName, clientInfo, website, keyword, template }, section)
         .catch(err => {
           console.error(`Section ${section.sectionNumber} failed:`, err.message);
           return { output: `[Section ${section.sectionNumber} generation failed]`, fleschScore: 0, sectionNumber: section.sectionNumber };
@@ -142,9 +202,12 @@ async function runPipeline(payload) {
   sectionResults.sort((a, b) => a.sectionNumber - b.sectionNumber);
   const sectionTexts = sectionResults.map(r => r.output);
 
-  // ─── 2. Compile HTML ───────────────────────────────────────────────────────
+  // ─── 2. Compile HTML + post-processing ──────────────────────────────────────
   console.log('[Pipeline] Compiling HTML...');
-  const htmlContent = compileArticle(sectionTexts);
+  let htmlContent = compileArticle(sectionTexts);
+  htmlContent = enforceSingleH1(htmlContent);
+  htmlContent = stripPlaceholders(htmlContent, clientName);
+  htmlContent = stripLinksFromHeadings(htmlContent);
 
   // ─── 3. Parallel: external links + internal links + title/meta ─────────────
   console.log('[Pipeline] Running link enrichment and title/meta in parallel...');
@@ -183,8 +246,44 @@ async function runPipeline(payload) {
   // const seoHeader = `\n<div class="seo-header">\n  <h1>${titleMeta.titleTag}</h1>\n  <p class="meta-description">${titleMeta.description}</p>\n</div>\n`;
   // const fullContent = seoHeader + linkedHTML;
   //03.10.2026 replaced variables with below to prevent margin bleed
-  const fullContent = linkedHTML;
-  
+  let fullContent = linkedHTML;
+
+  // ─── 5b. Whole-article structural review ──────────────────────────────────
+  console.log('[Pipeline] Running whole-article structural review...');
+  let reviewResult = { issues: [], fixed_article: '' };
+  try {
+    const reviewRaw = await callClaude(
+      ...Object.values(parsePrompt(prompts['article-review'], {
+        htmlContent: fullContent,
+        template: template || 'practice',
+        clientName: clientName || '',
+        keyword: keyword || ''
+      })),
+      'claude-sonnet-4-6'
+    );
+    reviewResult = parseJSON(reviewRaw);
+
+    if (reviewResult.issues && reviewResult.issues.length > 0) {
+      console.log(`[Pipeline] Review found ${reviewResult.issues.length} issue(s):`);
+      reviewResult.issues.forEach(issue => {
+        console.log(`  - [${issue.type}] ${issue.description}`);
+      });
+      if (reviewResult.fixed_article) {
+        fullContent = reviewResult.fixed_article;
+        // Re-run post-processing after review fixes (review may reintroduce issues)
+        fullContent = enforceSingleH1(fullContent);
+        fullContent = stripPlaceholders(fullContent, clientName);
+        fullContent = stripLinksFromHeadings(fullContent);
+        console.log('[Pipeline] Applied structural fixes from review');
+      }
+    } else {
+      console.log('[Pipeline] Review passed — no structural issues found');
+    }
+  } catch (e) {
+    console.error('Article review failed:', e.message);
+    // Non-fatal — continue with original content
+  }
+
   // ─── 6. Legal ethics compliance ───────────────────────────────────────────
   console.log('[Pipeline] Running legal compliance check...');
   let complianceResult = { violations: [], total: 0, categories: [] };
@@ -198,7 +297,11 @@ async function runPipeline(payload) {
     console.error('Compliance check failed:', e.message);
   }
 
-  const { htmlContent: cleanedContent } = applyCompliance(fullContent, complianceResult);
+  let { htmlContent: cleanedContent } = applyCompliance(fullContent, complianceResult);
+  // Re-run post-processing after compliance fixes
+  cleanedContent = enforceSingleH1(cleanedContent);
+  cleanedContent = stripPlaceholders(cleanedContent, clientName);
+  cleanedContent = stripLinksFromHeadings(cleanedContent);
 
   // ─── 7. Parallel: schema + slug ────────────────────────────────────────────
   console.log('[Pipeline] Generating schema and slug in parallel...');
@@ -223,7 +326,14 @@ async function runPipeline(payload) {
   const scores = scoreArticle(cleanedContent);
 
   // ─── 9. Upsert to Supabase ────────────────────────────────────────────────
-  console.log('[Pipeline] Upserting to Supabase...');
+  const skipPublish = process.env.SKIP_PUBLISH === '1';
+  if (skipPublish) {
+    console.log('[Pipeline] SKIP_PUBLISH=1 — writing HTML to test-output/ instead');
+    const outputDir = path.join(__dirname, 'test-output');
+    if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir);
+    fs.writeFileSync(path.join(outputDir, `${articleId}.html`), cleanedContent);
+    console.log(`[Pipeline] Saved: test-output/${articleId}.html`);
+  }
   const articleRecord = {
     received_article: cleanedContent,
     id: Math.random().toString(36).substring(2, 12),
@@ -245,18 +355,23 @@ async function runPipeline(payload) {
   };
 
   let supabaseError = null;
-  try {
-    await upsertArticle(articleRecord);
-    console.log('[Pipeline] Supabase upsert success');
-  } catch (err) {
-    supabaseError = err.message;
-    console.error('[Pipeline] Supabase upsert failed:', err.message);
+  if (!skipPublish) {
+    try {
+      await upsertArticle(articleRecord);
+      console.log('[Pipeline] Supabase upsert success');
+    } catch (err) {
+      supabaseError = err.message;
+      console.error('[Pipeline] Supabase upsert failed:', err.message);
+    }
+  } else {
+    console.log('[Pipeline] Skipping Supabase upsert (SKIP_PUBLISH=1)');
   }
 
   // ─── 10. Publish to internal.goconstellation.com ─────────────────────────
   let publishedUrl = null;
-  try {
-    publishedUrl = await publishArticle({
+  if (!skipPublish) {
+    try {
+      publishedUrl = await publishArticle({
       articleId,
       clientName,
       keyword,
@@ -267,8 +382,11 @@ async function runPipeline(payload) {
       pageUrl: slugData.pageUrl,
       userId
     });
-  } catch (err) {
-    console.error('[Pipeline] Publish failed:', err.message);
+    } catch (err) {
+      console.error('[Pipeline] Publish failed:', err.message);
+    }
+  } else {
+    console.log('[Pipeline] Skipping publish (SKIP_PUBLISH=1)');
   }
 
   return {

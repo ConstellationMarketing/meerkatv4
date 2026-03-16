@@ -6,12 +6,17 @@ Client ID: {{clientId}}
 Website: {{website}}
 Background Information: {{clientInfo}}
 
+## PAGE TYPE: {{template}}
+This article is a **{{template}}** page. Follow the page-type-specific rules below carefully.
+
 ## STYLE GUIDELINES
 
 **Target Flesch Reading Ease: 60-75**
 
 ## Heading Structure
 - The article must contain exactly ONE H1 tag — never more
+- The H1 MUST be the primary keyword or a close natural variation of it. Do not use a creative or editorial headline as the H1.
+- Only the Introduction section (section 1) should include the H1. All other sections must start with H2.
 - All primary sections must use H2 tags
 - Subsections must use H3 tags
 - Never use H1 more than once regardless of section or context
@@ -66,17 +71,32 @@ Every article must include ALL of the following sections in this order:
 
 Never omit any of these sections regardless of keyword or article type.
 
+### What to Expect — Minimum Depth Requirement
+The "What to Expect" section must cover the legal process step by step. Include:
+- At least 3–5 distinct steps or stages
+- Timelines or timeframe expectations where applicable
+- What the client should expect at each stage
+- What the firm does at each stage
+- Aim for at least 200 words
+- This section is about the **legal process and client experience** — NOT a list of firm services
+
 ## Anti-Repetition Rules
 - Each section must introduce new information not covered in any previous section
 - Never restate points, arguments, or facts already made in an earlier section
 - Before writing a section, assume all previous sections have already been written — your section must add value beyond what came before
 - If a concept was introduced in the Introduction, do not reintroduce it in body sections — build on it instead
 - Varied phrasing of the same idea still counts as repetition and must be avoided
+- **Introduction**: Write exactly ONE intro paragraph block. Do not repeat or restate the opening paragraph. Never write the intro twice with different wording.
 
 ## Tagline Rules
-- Taglines must be 7 words or fewer
+- If this is a **practice** page: you MUST include exactly one tagline (7 words or fewer) in the Introduction section ONLY
+- If this is a **supporting** page: you MAY include one tagline or omit it entirely — never more than one
+- The tagline must ONLY appear in the Introduction section (section 1). If you are writing any section other than the Introduction, do NOT include a tagline or any short bold standalone phrase that resembles one.
 - The tagline must never restate or paraphrase the H1 heading
 - Taglines must be punchy and distinct — a fresh angle, not a summary
+- A tagline must appear exactly once in the entire article — never repeat it
+- Format taglines with double asterisks for bold: **Your tagline here.** — never use single asterisks
+- Do NOT place short bold standalone phrases (e.g. "**Results matter.**", "**Experienced. Focused. Ready.**") anywhere in the article. The only standalone bold phrase allowed is the single tagline in the Introduction. Any short bold phrase on its own line outside the Introduction is prohibited.
 
 ## Legal Language Requirements
 - Never make definitive legal conclusions — avoid "you will win", "you are entitled to", "this is illegal", "guaranteed outcome"
@@ -85,6 +105,33 @@ Never omit any of these sections regardless of keyword or article type.
 - Never state case outcomes as guaranteed — legal results always depend on individual circumstances
 - Do not claim specialization — use "focuses on" never "specializes in"
 - Avoid outcome promises — use effort-based language: "we work toward the best possible outcome"
+
+## CTA — Page-Type-Specific Rules
+- **Practice pages**: Direct CTA with a dedicated heading. Clear ask, brief explanation of legal support. May be assertive and conversion-oriented.
+- **Supporting/resource pages**: Short soft CTA only. 2–4 sentences maximum (50–80 words). No guarantees, no aggressive language. Suggest seeking legal guidance without a hard sell. Use phrasing like "speak with an attorney" — NOT "hire us today" or "call now for a free consultation." Keep it brief and non-promotional.
+
+## Link Distribution
+- When mentioning legal topics or concepts in body text, these are natural anchor points for links
+- Do NOT cluster all references or linkable terms in the CTA section
+- Distribute linkable terms naturally throughout the article body
+
+## Bold Formatting Rules
+- Use bold (**text**) sparingly and consistently throughout the article
+- Bold should ONLY be used for: key legal terms on first use, defined concepts, or section sub-labels
+- Do NOT bold random phrases for emphasis
+- Do NOT bold entire sentences
+- Apply bold with a consistent pattern — if you bold a term type in one section, bold the same term type in other sections
+- When listing multiple terms in a series (e.g., "property division, spousal support, or child custody"), either bold ALL terms in the list or NONE — never bold only some items in a list
+- When bolding a legal term that is a compound phrase (e.g., "maintenance awards", "comparative fault", "parenting plan"), bold the ENTIRE phrase — never bold only part of a multi-word concept
+
+## Placeholder Prohibition
+- NEVER output bracketed placeholders like [Firm name], [City], [State], [Attorney Name], or similar
+- Always use the actual client name from CLIENT DETAILS: "{{clientName}}"
+- If a specific detail is not available, use natural generic phrasing like "our firm" or "our team" — never a raw placeholder
+
+## Ordered List Numbering
+- When writing ordered/numbered lists, use sequential numbers: 1., 2., 3., etc.
+- Do NOT use "1." for every item — each item must have a unique sequential number
 
 --
 Consider the following:

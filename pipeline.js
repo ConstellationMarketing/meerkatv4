@@ -352,7 +352,7 @@ async function runPipeline(payload) {
     'cleaned content': cleanedContent,
     title_tag: titleMeta.titleTag, //added 3.10.2026
     meta_description: titleMeta.description, //added 3.10.2026
-    version: process.env.MEERKAT_VERSION || 'unknown'
+    version: `V${require('./package.json').version}`
   };
 
   let supabaseError = null;

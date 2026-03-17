@@ -335,13 +335,18 @@ async function runPipeline(payload) {
     console.log(`[Pipeline] Saved: test-output/${articleId}.html`);
   }
   const articleRecord = {
-    received_article: cleanedContent,
+    received_article: {
+      content: cleanedContent,
+      title: titleMeta.titleTag || null,
+      meta: titleMeta.description || null,
+      receivedAt: new Date().toISOString()
+    },
     id: Math.random().toString(36).substring(2, 12),
     client_id: clientId,
     keyword,
     client_name: clientName,
     article_id: articleId,
-    sections: JSON.stringify(sections),
+    sections: sections,
     Schema: schema,
     template: template || null,
     'word count': scores.wordCount,
@@ -350,8 +355,8 @@ async function runPipeline(payload) {
     'URL Slug': slugData.urlSlug,
     user_id: userId,
     'cleaned content': cleanedContent,
-    title_tag: titleMeta.titleTag, //added 3.10.2026
-    meta_description: titleMeta.description, //added 3.10.2026
+    title_tag: titleMeta.titleTag || null,
+    meta_description: titleMeta.description || null,
     version: `V${require('./package.json').version}`
   };
 

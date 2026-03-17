@@ -16,7 +16,7 @@ Most recent changes appear at the top. Each entry links to the Pull Request for 
 - Translations triggered from the article index table via a "Translate ▾" dropdown button
 - Translation runs async on the VPS via Claude Haiku — neutral Latin American Spanish, Southern Vietnamese dialect, tone matched to source article
 - Translated pages published to GitHub at `/meerkat/{slug}/es/` and `/meerkat/{slug}/vi/`
-- Translation status stored as JSONB in the `translations` column of `article_outlines_test`
+- Translation status stored as JSONB in the `translations` column of `article_outlines`
 - Status polling updates the index table in real-time (translating… → clickable link)
 - Re-translation supported — clicking a language that's already translated overwrites it cleanly
 - Cloudflare Tunnel configured on VPS (`meerkat-api.goconstellation.com`) so the browser can call the VPS API from the HTTPS index page
@@ -28,7 +28,7 @@ Most recent changes appear at the top. Each entry links to the Pull Request for 
 - Launched Meerkat v4 as a parallel Claude Code-based pipeline running alongside the existing n8n workflow
 - Sections generated in parallel via Claude Sonnet with Flesch readability scoring and auto-retry
 - Legal compliance check added as a dedicated pipeline step
-- Articles saved to Supabase (article_outlines_test) and HTML previews uploaded to Google Drive
+- Articles saved to Supabase (article_outlines) and HTML previews uploaded to Google Drive
 - Auto-deploy via GitHub Actions on every push to main, with automatic rollback on failed health checks
 
 ---

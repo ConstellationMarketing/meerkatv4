@@ -404,7 +404,7 @@ async function runPipeline(payload) {
     urlSlug: slugData.urlSlug,
     supabaseError,
     publishedUrl,
-    table: process.env.SUPABASE_TABLE || 'article_outlines_test'
+    table: process.env.SUPABASE_TABLE || 'article_outlines'
   };
 }
 

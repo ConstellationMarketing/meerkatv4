@@ -29,7 +29,7 @@ app.use((req, res, next) => {
 
 // Health check
 app.get('/', (req, res) => {
-  res.json({ status: 'ok', service: 'meerkat-service', table: process.env.SUPABASE_TABLE || 'article_outlines_test' });
+  res.json({ status: 'ok', service: 'meerkat-service', table: process.env.SUPABASE_TABLE || 'article_outlines' });
 });
 
 // Main generation endpoint — same path the web app will call
@@ -110,5 +110,5 @@ app.get('/translate/status', async (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Meerkat service running on port ${PORT}`);
-  console.log(`Supabase table: ${process.env.SUPABASE_TABLE || 'article_outlines_test'}`);
+  console.log(`Supabase table: ${process.env.SUPABASE_TABLE || 'article_outlines'}`);
 });

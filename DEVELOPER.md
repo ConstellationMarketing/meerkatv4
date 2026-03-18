@@ -2,7 +2,7 @@
 
 ## What This Is
 
-Meerkat is a Node.js service that generates SEO articles for legal clients using the Claude API. It runs in parallel with an existing n8n workflow, writing outputs to a separate Supabase table (`article_outlines_test`) for quality comparison before full cutover.
+Meerkat is a Node.js service that generates SEO articles for legal clients using the Claude API. It writes to the production Supabase table (`article_outlines`), replacing the previous n8n workflow.
 
 When an article job is triggered from the web app, the n8n workflow (Meerkatv3.3) fires the payload simultaneously to both the original pipeline and this service. This service generates the article, saves it to Supabase, and uploads a styled HTML preview to Google Drive.
 
@@ -50,7 +50,7 @@ Copy `.env.example` to `.env` and fill in the values (get from 1Password — sto
 ANTHROPIC_API_KEY=
 SUPABASE_URL=
 SUPABASE_KEY=
-SUPABASE_TABLE=article_outlines_test
+SUPABASE_TABLE=article_outlines
 PORT=3000
 GOOGLE_CLIENT_ID=
 GOOGLE_CLIENT_SECRET=
@@ -105,7 +105,7 @@ meerkat-service/
 ### `GET /`
 Health check.
 ```json
-{ "status": "ok", "service": "meerkat-service", "table": "article_outlines_test" }
+{ "status": "ok", "service": "meerkat-service", "table": "article_outlines" }
 ```
 
 ### `POST /generate`
@@ -152,7 +152,7 @@ All steps run in `pipeline.js`. The order:
 5. **Legal compliance** — Claude Sonnet scans for compliance violations, `applyCompliance()` removes flagged content
 6. **Parallel: schema + slug** — JSON-LD schema and URL slug generated simultaneously
 7. **Score article** — Flesch readability score and word count calculated
-8. **Supabase upsert** — full article record saved to `article_outlines_test`
+8. **Supabase upsert** — full article record saved to `article_outlines`
 9. **Drive upload** — styled HTML preview uploaded to Google Drive folder `1azI3ux5ctzJvszKPbo3wyhKFJ7sw9fwe`
 
 ---
@@ -223,7 +223,7 @@ Full commit history: `https://github.com/ConstellationMarketing/meerkatv4/commit
 | `ANTHROPIC_API_KEY` | Claude API key |
 | `SUPABASE_URL` | Supabase project URL |
 | `SUPABASE_KEY` | Supabase service role key |
-| `SUPABASE_TABLE` | Table to write to (default: `article_outlines_test`) |
+| `SUPABASE_TABLE` | Table to write to (default: `article_outlines`) |
 | `PORT` | Server port (default: 3000) |
 | `GOOGLE_CLIENT_ID` | Google OAuth2 client ID |
 | `GOOGLE_CLIENT_SECRET` | Google OAuth2 client secret |
@@ -235,4 +235,4 @@ Full commit history: `https://github.com/ConstellationMarketing/meerkatv4/commit
 
 The service is called from the **Meerkatv3.3** workflow on n8n (`https://n8n-14lp.onrender.com`, workflow ID `8MC0W3ht4IQE2CiJ`). A node called **"VPS Generate"** fires a parallel POST to `http://45.55.248.2:3000/generate` with the same payload the Webhook node receives, with `continueOnFail: true` so n8n never breaks if the VPS is unreachable.
 
-The original n8n pipeline writes to `article_outlines`. This service writes to `article_outlines_test`. Both run on every article job.
+This service writes to `article_outlines`. The previous n8n pipeline has been disabled.

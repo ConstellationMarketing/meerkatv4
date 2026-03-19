@@ -18,7 +18,7 @@ This article is a **{{template}}** page. Follow the page-type-specific rules bel
 - The H1 MUST be the primary keyword or a close natural variation of it. Do not use a creative or editorial headline as the H1.
 - Only the Introduction section (section 1) should include the H1. All other sections must start with H2.
 - All primary sections must use H2 tags
-- Subsections must use H3 tags
+- Subsections may use H3 tags, but use them sparingly — no more than 3 H3s per section. Prefer inline bold labels or paragraph structure over excessive sub-headings. Not every point needs its own H3.
 - Never use H1 more than once regardless of section or context
 
 ### Word Choice
@@ -62,7 +62,7 @@ This article is a **{{template}}** page. Follow the page-type-specific rules bel
 - FAQ answers must be concise — 2-4 sentences maximum per answer
 ## Required Section Template
 Every article must include ALL of the following sections in this order:
-1. Introduction (200–300 words, keyword-natural, professional tone)
+1. Introduction (MINIMUM 200 words, target 250–300 words. This is strictly enforced — introductions under 200 words are unacceptable. Include: the H1, the tagline if practice page, a clear statement of the legal problem, how the firm helps, and a brief preview of what the reader will learn.)
 2. Legal Overview (explain the relevant law or legal context)
 3. Why Choose Us (trust signals only: credentials, experience, results — NOT service descriptions)
 4. What to Expect (the legal process, steps, and timelines — NOT firm services)
@@ -87,6 +87,7 @@ The "What to Expect" section must cover the legal process step by step. Include:
 - If a concept was introduced in the Introduction, do not reintroduce it in body sections — build on it instead
 - Varied phrasing of the same idea still counts as repetition and must be avoided
 - **Introduction**: Write exactly ONE intro paragraph block. Do not repeat or restate the opening paragraph. Never write the intro twice with different wording.
+- Do NOT repeat the same verb+pronoun pattern (e.g., "We fight," "We work," "We handle") more than twice in any section. Vary sentence openings — use the client's name, "Our team," "Your case," or lead with the action instead of "We."
 
 ## Tagline Rules
 - If this is a **practice** page: you MUST include exactly one tagline (7 words or fewer) in the Introduction section ONLY
@@ -107,13 +108,20 @@ The "What to Expect" section must cover the legal process step by step. Include:
 - Avoid outcome promises — use effort-based language: "we work toward the best possible outcome"
 
 ## CTA — Page-Type-Specific Rules
-- **Practice pages**: Direct CTA with a dedicated heading. Clear ask, brief explanation of legal support. May be assertive and conversion-oriented.
-- **Supporting/resource pages**: Short soft CTA only. 2–4 sentences maximum (50–80 words). No guarantees, no aggressive language. Suggest seeking legal guidance without a hard sell. Use phrasing like "speak with an attorney" — NOT "hire us today" or "call now for a free consultation." Keep it brief and non-promotional.
+- **Practice pages**: Direct CTA with a dedicated heading. Clear ask, brief explanation of legal support. May be assertive and conversion-oriented. Include a "Next Steps" sub-section with 2-3 actionable bullet points (e.g., "Visit [website] to learn more," "Call to schedule a free consultation").
+- **Supporting/resource pages**: Short soft CTA only. 2–4 sentences maximum (50–80 words). No guarantees, no aggressive language. Suggest seeking legal guidance without a hard sell. Use phrasing like "speak with an attorney" — NOT "hire us today" or "call now for a free consultation." Keep it brief and non-promotional. Do NOT use a CTA heading like "Take Action Now" or "Speak With a Lawyer Today" — keep the tone educational and suggestive.
 
 ## Link Distribution
 - When mentioning legal topics or concepts in body text, these are natural anchor points for links
 - Do NOT cluster all references or linkable terms in the CTA section
 - Distribute linkable terms naturally throughout the article body
+
+## Internal Link Requirements
+- Every article must include at least 3 internal links to pages on the client's website ({{website}})
+- Link to at least one related practice area page (e.g., if the article is about DUI, link to a drug charges or license suspension page if one exists)
+- Link to the contact page or homepage at least once
+- Use natural anchor text — link relevant phrases in the body text, not raw URLs
+- Do NOT place all internal links in the CTA section — spread them across the article body
 
 ## Bold Formatting Rules
 - Use bold (**text**) sparingly and consistently throughout the article
@@ -132,6 +140,20 @@ The "What to Expect" section must cover the legal process step by step. Include:
 ## Ordered List Numbering
 - When writing ordered/numbered lists, use sequential numbers: 1., 2., 3., etc.
 - Do NOT use "1." for every item — each item must have a unique sequential number
+- Do NOT put blank lines between list items — keep all items in a single continuous block
+
+## Output Formatting Rules
+- Output clean markdown only — no HTML tags
+- Do NOT use horizontal rules (--- or ***) anywhere in the output
+- Do NOT use markdown thematic breaks to separate sections — use headings instead
+- Each section should have one H2 heading at the top, optionally followed by H3 sub-headings
+- Keep list items tightly grouped with no blank lines between them
+- Every bold marker (**) must have a matching closing marker on the same line — never leave bold unclosed
+
+## Minimum Word Count
+- The total article (excluding FAQ) must be at least 1,000 words
+- Each non-FAQ section should contribute meaningfully to this total — aim for at least 150 words per section
+- The FAQ section should be additional words on top of the 1,000-word body minimum
 
 --
 Consider the following:

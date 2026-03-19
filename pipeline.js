@@ -9,6 +9,7 @@ const { applyCompliance } = require('./lib/apply-compliance');
 const { scoreArticle } = require('./lib/scoring');
 const { upsertArticle } = require('./lib/supabase');
 const { publishArticle } = require('./lib/github-publish');
+const { checkAndFixFormat } = require('./lib/format-checker');
 
 const client = new Anthropic();
 
@@ -303,7 +304,21 @@ async function runPipeline(payload) {
   cleanedContent = stripPlaceholders(cleanedContent, clientName);
   cleanedContent = stripLinksFromHeadings(cleanedContent);
 
-  // ─── 7. Parallel: schema + slug ────────────────────────────────────────────
+  // ─── 7. Format check + auto-fix ──────────────────────────────────────────
+  console.log('[Pipeline] Running format checker...');
+  const formatResult = checkAndFixFormat(cleanedContent, { keyword, website, template });
+  if (formatResult.fixes.length > 0) {
+    console.log(`[Pipeline] Format auto-fixes applied: ${formatResult.fixes.join(', ')}`);
+    cleanedContent = formatResult.html;
+  }
+  if (formatResult.warnings.length > 0) {
+    console.log(`[Pipeline] Format warnings (${formatResult.warnings.length}):`);
+    formatResult.warnings.forEach(w => console.log(`  ⚠ ${w}`));
+  } else {
+    console.log('[Pipeline] Format check passed — no issues found');
+  }
+
+  // ─── 8. Parallel: schema + slug ────────────────────────────────────────────
   console.log('[Pipeline] Generating schema and slug in parallel...');
   const [schemaRaw, slugRaw] = await Promise.all([
     callClaude(
@@ -357,7 +372,8 @@ async function runPipeline(payload) {
     'cleaned content': cleanedContent,
     title_tag: titleMeta.titleTag || null,
     meta_description: titleMeta.description || null,
-    version: `V${require('./package.json').version}`
+    version: `V${require('./package.json').version}`,
+    format_warnings: formatResult.warnings.length > 0 ? formatResult.warnings : null
   };
 
   let supabaseError = null;

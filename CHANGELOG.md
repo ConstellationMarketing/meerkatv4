@@ -10,6 +10,20 @@ Most recent changes appear at the top. Each entry links to the Pull Request for 
 
 ---
 
+## v4.0.3 — March 30, 2026 — Feedback-Driven Quality Improvements
+
+Based on analysis of 10 V4 editor feedback submissions (avg 68 min edit time vs 60 min target). Structural/formatting issues from V3 are resolved — remaining feedback is content quality.
+
+- **Word count enforcement** — sections now retry if output is under 80% of target word count, not just on Flesch score. Addresses thin articles (500–970 words) that required near-complete rewrites. (PR #18)
+- **Intro filler ban** — prohibited "this guide will walk you through..." closers and article meta-commentary that editors were consistently deleting. (PR #18)
+- **Lead with the point** — banned emotional filler openers ("Facing criminal charges can be daunting...") that buried substantive information. First sentence of every paragraph must contain actionable content. (PR #18)
+- **Why Choose Us / What to Expect personalization** — these sections now require specific client details (attorney names, credentials, selling points) and jurisdiction-specific legal process steps. No generic trust language when client info is available. (PR #18)
+- **Supporting page section gating** — "Why Choose Us" no longer appears on supporting/resource pages. Caught in both section generation and article review. (PR #18)
+- **Format checker** — warns when client info is empty so editors know personalization sections will be generic. (PR #18)
+- **Feedback data fixes** — fixed "Unknown Article" bug in feedback form by using `title_tag` as primary title source (meerkatv3 PR #9). Backfilled 6 feedback entries with correct titles and V4.0.2 version. Fixed section data overwrite issue where editor saves were clearing pipeline section instructions (meerkatv3 PR #10).
+
+---
+
 ## March 9, 2026 — Translation Pipeline (Patrick Carver)
 
 - Added Spanish and Vietnamese translation for any generated article

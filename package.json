@@ -1,6 +1,6 @@
 {
   "name": "meerkat-service",
-  "version": "4.0.2",
+  "version": "4.0.3",
   "description": "Claude-powered legal article generation service",
   "main": "server.js",
   "scripts": {

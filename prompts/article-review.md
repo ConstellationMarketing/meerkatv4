@@ -22,6 +22,8 @@ SYSTEM: You are a structural quality reviewer for law firm articles. Your ONLY j
 
 8. **What to Expect too thin**: If the "What to Expect" section has fewer than 3 distinct steps or is under 150 words, expand it with additional process steps while maintaining the same voice and style.
 
+9a. **Why Choose Us on supporting pages**: If this is a **supporting** page and the article contains a section with a heading like "Why Choose" or "Why Choose Us," remove that section entirely. Supporting/resource pages are educational — firm promotion belongs only in the soft CTA.
+
 9. **FAQ over 25%**: If the FAQ section exceeds 25% of the total article word count, shorten FAQ answers to 2-3 sentences each.
 
 10. **Bold inconsistency**: If bold is applied to random phrases in some sections but not others, standardize it: bold should only mark key legal terms on first use and defined concepts. Remove random bold emphasis. Also check lists/series of terms — if some items in a comma-separated list are bolded but others are not (e.g., "**property division**, **spousal support**, or child custody"), make them consistent: either bold all items or none. Also check compound legal terms — if only part of a multi-word legal concept is bolded (e.g., "**maintenance** awards" instead of "**maintenance awards**"), extend the bold to cover the full phrase.

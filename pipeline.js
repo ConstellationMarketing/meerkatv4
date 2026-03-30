@@ -135,23 +135,41 @@ async function generateSection(payload, section) {
 
   let lastOutput = null;
   let lastScore = null;
+  let lastWordCount = null;
   const MAX_RETRIES = 2;
+  const targetWords = section.wordCount ? parseInt(section.wordCount, 10) : null;
+  // Section passes QC if word count is at least 80% of target (allows minor variance)
+  const minWords = targetWords ? Math.floor(targetWords * 0.8) : null;
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     let userMsg = user;
-    if (attempt > 0 && lastScore !== null) {
-      userMsg += `\n\nPrevious output scored ${lastScore}/100. Shorten sentences. Simplify vocabulary.`;
+    if (attempt > 0) {
+      const issues = [];
+      if (lastScore !== null && lastScore < 70) {
+        issues.push(`Flesch score was ${lastScore}/100 — shorten sentences, simplify vocabulary.`);
+      }
+      if (minWords && lastWordCount < minWords) {
+        issues.push(`Word count was ${lastWordCount} — target is ${targetWords}. Expand with more substantive detail. Do not pad with filler.`);
+      }
+      userMsg += `\n\nPrevious output needs revision: ${issues.join(' ')}`;
     }
 
     const output = await callClaude(system, userMsg, 'claude-sonnet-4-6');
-    const { rawScore } = scoreArticle(output);
+    const { rawScore, wordCount: outputWords } = scoreArticle(output);
     lastOutput = output;
     lastScore = rawScore;
+    lastWordCount = outputWords;
 
-    if (rawScore >= 70) break;
+    const fleschOk = rawScore >= 70;
+    const wordCountOk = !minWords || outputWords >= minWords;
+
+    if (fleschOk && wordCountOk) break;
 
     if (attempt === MAX_RETRIES) {
-      console.warn(`Section ${section.sectionNumber} scored ${rawScore} after ${MAX_RETRIES + 1} attempts — using as-is`);
+      const failures = [];
+      if (!fleschOk) failures.push(`flesch=${rawScore}`);
+      if (!wordCountOk) failures.push(`words=${outputWords}/${targetWords}`);
+      console.warn(`Section ${section.sectionNumber} QC issues after ${MAX_RETRIES + 1} attempts (${failures.join(', ')}) — using as-is`);
     }
   }
 
@@ -306,7 +324,7 @@ async function runPipeline(payload) {
 
   // ─── 7. Format check + auto-fix ──────────────────────────────────────────
   console.log('[Pipeline] Running format checker...');
-  const formatResult = checkAndFixFormat(cleanedContent, { keyword, website, template });
+  const formatResult = checkAndFixFormat(cleanedContent, { keyword, website, template, clientInfo });
   if (formatResult.fixes.length > 0) {
     console.log(`[Pipeline] Format auto-fixes applied: ${formatResult.fixes.join(', ')}`);
     cleanedContent = formatResult.html;

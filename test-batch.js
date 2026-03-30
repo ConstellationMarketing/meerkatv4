@@ -11,8 +11,9 @@ process.env.SKIP_PUBLISH = '1';
 const fs = require('fs');
 const path = require('path');
 const { runPipeline } = require('./pipeline');
+const { checkAndFixFormat } = require('./lib/format-checker');
 
-const practiceTemplate = 'Practice Page (v2Training Module)';
+const practiceTemplate = 'Practice Page';
 const supportingTemplate = 'supporting';
 
 function practiceSections(keyword, clientName) {
@@ -168,6 +169,7 @@ async function main() {
       const htmlPath = path.join(outputDir, `${article.articleid}.html`);
       const html = fs.existsSync(htmlPath) ? fs.readFileSync(htmlPath, 'utf8') : '';
       const checks = validate(html, article);
+      const formatResult = html ? checkAndFixFormat(html, { keyword: article.keyword, website: article.website, template: article.template }) : { warnings: [], fixes: [] };
 
       results.push({
         id: article.articleid,
@@ -178,9 +180,17 @@ async function main() {
         flesch: result.fleschScore,
         file: htmlPath,
         checks,
+        formatWarnings: formatResult.warnings,
+        formatFixes: formatResult.fixes,
       });
 
       console.log(`  Done: ${result.wordCount} words | Flesch: ${result.fleschScore}`);
+      if (formatResult.warnings.length > 0) {
+        console.log(`  Format warnings: ${formatResult.warnings.length}`);
+        formatResult.warnings.forEach(w => console.log(`    ⚠ ${w}`));
+      } else {
+        console.log('  Format check: CLEAN');
+      }
     } catch (err) {
       console.error(`  FAILED: ${err.message}`);
       results.push({
@@ -208,6 +218,12 @@ async function main() {
     Object.entries(r.checks).forEach(([k, v]) => {
       console.log(`    ${k}: ${v}`);
     });
+    if (r.formatWarnings && r.formatWarnings.length > 0) {
+      console.log(`    Format warnings (${r.formatWarnings.length}):`);
+      r.formatWarnings.forEach(w => console.log(`      ⚠ ${w}`));
+    } else if (r.formatWarnings) {
+      console.log('    Format: CLEAN');
+    }
   });
 
   // Write JSON results

@@ -71,6 +71,22 @@ Every article must include ALL of the following sections in this order:
 
 Never omit any of these sections regardless of keyword or article type.
 
+### Why Choose Us — Personalization Requirement
+This section MUST be grounded in specific details from the CLIENT DETAILS above. Do not write generic trust language.
+- Reference the lead attorney BY NAME if provided in client details
+- Include at least 3 specific, verifiable differentiators from the client's selling points (e.g., years of experience, case focus areas, prior roles, awards, geographic coverage)
+- If the client details mention a specific credential or background (e.g., "former public defender," "10+ years focused on X"), that MUST appear in this section
+- Do NOT use generic phrases like "experienced team," "dedicated to your case," "proven track record," or "compassionate representation" unless backed by a specific detail in the same sentence
+- Each subsection or paragraph must tie back to a concrete client attribute — no filler paragraphs allowed
+
+### What to Expect — Jurisdiction-Specific Requirement
+This section MUST be tailored to the specific state and legal process implied by the keyword.
+- Identify the state/jurisdiction from the keyword or client details and name it explicitly (e.g., "In Georgia, the appeals process begins with...")
+- Reference jurisdiction-specific courts, filing deadlines, statutes, or procedural steps where applicable
+- If the client details include target pages or practice area URLs, use those to infer the correct legal process
+- Do NOT write a generic legal process that could apply to any state — every step should reflect the actual jurisdiction
+- Include realistic timelines or timeframe expectations specific to that jurisdiction where possible
+
 ### What to Expect — Minimum Depth Requirement
 The "What to Expect" section must cover the legal process step by step. Include:
 - At least 3–5 distinct steps or stages
@@ -89,6 +105,26 @@ The "What to Expect" section must cover the legal process step by step. Include:
 - **Introduction**: Write exactly ONE intro paragraph block. Do not repeat or restate the opening paragraph. Never write the intro twice with different wording.
 - Do NOT repeat the same verb+pronoun pattern (e.g., "We fight," "We work," "We handle") more than twice in any section. Vary sentence openings — use the client's name, "Our team," "Your case," or lead with the action instead of "We."
 
+## Introduction — Prohibited Filler
+- Do NOT end the introduction with meta-commentary about the article itself. The following patterns are banned:
+  - "This guide will walk you through..."
+  - "In this article, you will learn..."
+  - "Below, we cover..."
+  - "Read on to discover..."
+  - "Here's what you need to know..."
+- The introduction must end with substantive content — a specific claim, a client-relevant detail, or a transition to the next section's topic. Not a table of contents.
+- Do NOT repeat in the introduction any details that will be the main focus of a later section. If "What to Expect" covers the legal process, the introduction should NOT preview those steps.
+
+## Lead With the Point — No Buried Information
+- The first sentence of every paragraph must contain substantive, actionable information — not emotional framing or atmosphere-setting.
+- Banned opening patterns:
+  - "Facing [legal issue] can be overwhelming/daunting/stressful/frightening..."
+  - "Dealing with [legal issue] is never easy..."
+  - "When you're going through [legal issue], you need..."
+  - "The legal system can be complex/confusing..."
+  - "No one expects to face [legal issue]..."
+- Instead, lead with the specific fact, process step, or legal concept the paragraph is about. Emotion and empathy can follow — but the point comes first.
+
 ## Tagline Rules
 - If this is a **practice** page: you MUST include exactly one tagline (7 words or fewer) in the Introduction section ONLY
 - If this is a **supporting** page: you MAY include one tagline or omit it entirely — never more than one
@@ -106,6 +142,10 @@ The "What to Expect" section must cover the legal process step by step. Include:
 - Never state case outcomes as guaranteed — legal results always depend on individual circumstances
 - Do not claim specialization — use "focuses on" never "specializes in"
 - Avoid outcome promises — use effort-based language: "we work toward the best possible outcome"
+
+## Page-Type Section Rules
+- **Supporting/resource pages** must NOT include a "Why Choose Us" section. Supporting pages are educational and informational — firm promotion belongs only in the soft CTA. If you are writing a supporting page and the section instructions ask for "Why Choose Us," replace it with additional educational content relevant to the keyword (e.g., deeper legal analysis, additional scenarios, or a comparison of approaches).
+- **Practice pages** MUST include "Why Choose Us" as a dedicated section.
 
 ## CTA — Page-Type-Specific Rules
 - **Practice pages**: Direct CTA with a dedicated heading. Clear ask, brief explanation of legal support. May be assertive and conversion-oriented. Include a "Next Steps" sub-section with 2-3 actionable bullet points (e.g., "Visit [website] to learn more," "Call to schedule a free consultation").

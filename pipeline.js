@@ -116,6 +116,72 @@ function stripLinksFromHeadings(html) {
   });
 }
 
+// Post-processing: fix malformed H3 tags where body content is inside the heading
+// e.g. <h3>Title\nBody paragraph text...</h3> → <h3>Title</h3>\n<p>Body paragraph text...</p>
+function fixMalformedH3(html) {
+  return html.replace(/<h3([^>]*)>([\s\S]*?)<\/h3>/gi, (match, attrs, inner) => {
+    const trimmed = inner.trim();
+    // Leave short headings and FAQ questions alone
+    const textOnly = trimmed.replace(/<[^>]+>/g, '').trim();
+    if (textOnly.length < 150 || textOnly.endsWith('?')) return match;
+
+    // Split on first newline — title is before, body is after
+    const nlIdx = trimmed.indexOf('\n');
+    if (nlIdx > 0) {
+      const title = trimmed.substring(0, nlIdx).trim();
+      const body = trimmed.substring(nlIdx + 1).trim();
+      return `<h3${attrs}>${title}</h3>\n<p>${body}</p>`;
+    }
+    return match;
+  });
+}
+
+// Word count targets by template for quality gating
+const TEMPLATE_WORD_TARGETS = {
+  'Practice Page': 2007,
+  'Supporting/Resource Page': 1150,
+  'practice': 2007,
+  'supporting': 1150,
+};
+
+// Pre-upsert quality gate — returns { pass, issues[] }
+function qualityGate(content, sections, template, wordCount) {
+  const issues = [];
+
+  // 1. Check for failed sections
+  const failedCount = (content.match(/\[Section \d+ generation failed\]/g) || []).length;
+  const totalSections = sections.length;
+  if (failedCount > 0) {
+    const failRatio = failedCount / totalSections;
+    issues.push(`${failedCount}/${totalSections} sections failed (${Math.round(failRatio * 100)}%)`);
+    if (failRatio > 0.5) {
+      return { pass: false, issues, reason: 'majority-sections-failed' };
+    }
+  }
+
+  // 2. Check for placeholder content
+  if (content.includes('Section content unavailable')) {
+    issues.push('Contains "Section content unavailable" placeholder');
+    return { pass: false, issues, reason: 'placeholder-content' };
+  }
+
+  // 3. Article-level word count gate
+  const target = TEMPLATE_WORD_TARGETS[template] || TEMPLATE_WORD_TARGETS['practice'];
+  const minWords = Math.round(target * 0.5);
+  if (wordCount < minWords) {
+    issues.push(`Word count ${wordCount} below minimum ${minWords} (50% of ${target} target)`);
+    return { pass: false, issues, reason: 'below-word-count' };
+  }
+
+  // 4. Must have at least one H1
+  if (!/<h1/i.test(content)) {
+    issues.push('Missing H1 heading');
+    return { pass: false, issues, reason: 'missing-h1' };
+  }
+
+  return { pass: true, issues };
+}
+
 // Generate one section with QC retry loop
 async function generateSection(payload, section) {
   const vars = {
@@ -227,6 +293,7 @@ async function runPipeline(payload) {
   htmlContent = enforceSingleH1(htmlContent);
   htmlContent = stripPlaceholders(htmlContent, clientName);
   htmlContent = stripLinksFromHeadings(htmlContent);
+  htmlContent = fixMalformedH3(htmlContent);
 
   // ─── 3. Parallel: external links + internal links + title/meta ─────────────
   console.log('[Pipeline] Running link enrichment and title/meta in parallel...');
@@ -293,6 +360,7 @@ async function runPipeline(payload) {
         fullContent = enforceSingleH1(fullContent);
         fullContent = stripPlaceholders(fullContent, clientName);
         fullContent = stripLinksFromHeadings(fullContent);
+        fullContent = fixMalformedH3(fullContent);
         console.log('[Pipeline] Applied structural fixes from review');
       }
     } else {
@@ -321,6 +389,7 @@ async function runPipeline(payload) {
   cleanedContent = enforceSingleH1(cleanedContent);
   cleanedContent = stripPlaceholders(cleanedContent, clientName);
   cleanedContent = stripLinksFromHeadings(cleanedContent);
+  cleanedContent = fixMalformedH3(cleanedContent);
 
   // ─── 7. Format check + auto-fix ──────────────────────────────────────────
   console.log('[Pipeline] Running format checker...');
@@ -394,8 +463,23 @@ async function runPipeline(payload) {
     format_warnings: formatResult.warnings.length > 0 ? formatResult.warnings : null
   };
 
+  // ─── 9a. Quality gate — block upsert if article is broken ─────────────────
+  const qc = qualityGate(cleanedContent, sections, template, scores.wordCount);
+  if (!qc.pass) {
+    console.error(`[Pipeline] ✗ QUALITY GATE FAILED for articleId=${articleId}:`);
+    qc.issues.forEach(i => console.error(`  - ${i}`));
+    console.error(`[Pipeline] Reason: ${qc.reason} — skipping Supabase upsert`);
+  } else {
+    if (qc.issues.length > 0) {
+      console.log(`[Pipeline] Quality gate passed with warnings:`);
+      qc.issues.forEach(i => console.log(`  ⚠ ${i}`));
+    }
+  }
+
   let supabaseError = null;
-  if (!skipPublish) {
+  if (!qc.pass) {
+    supabaseError = `Quality gate failed: ${qc.reason}`;
+  } else if (!skipPublish) {
     try {
       await upsertArticle(articleRecord);
       console.log('[Pipeline] Supabase upsert success');
@@ -438,7 +522,8 @@ async function runPipeline(payload) {
     urlSlug: slugData.urlSlug,
     supabaseError,
     publishedUrl,
-    table: process.env.SUPABASE_TABLE || 'article_outlines'
+    table: process.env.SUPABASE_TABLE || 'article_outlines',
+    articleRecord,
   };
 }
 

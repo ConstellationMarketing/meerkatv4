@@ -38,13 +38,29 @@ function parsePrompt(template, vars) {
 
 // Call Claude and return text output
 async function callClaude(systemPrompt, userPrompt, model = 'claude-haiku-4-5-20251001') {
-  const msg = await client.messages.create({
-    model,
-    max_tokens: 4096,
-    system: systemPrompt,
-    messages: [{ role: 'user', content: userPrompt }]
-  });
-  return msg.content[0].text.trim();
+  const MAX_API_RETRIES = 3;
+  const BASE_DELAY_MS = 5000;
+
+  for (let attempt = 1; attempt <= MAX_API_RETRIES; attempt++) {
+    try {
+      const msg = await client.messages.create({
+        model,
+        max_tokens: 4096,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }]
+      });
+      return msg.content[0].text.trim();
+    } catch (err) {
+      const isRetryable = err.status === 429 || err.status === 500 || err.status === 503 || err.code === 'ECONNRESET' || err.code === 'ETIMEDOUT';
+      if (isRetryable && attempt < MAX_API_RETRIES) {
+        const delay = BASE_DELAY_MS * attempt;
+        console.warn(`[callClaude] ${err.status || err.code} on attempt ${attempt}/${MAX_API_RETRIES} — retrying in ${delay / 1000}s...`);
+        await new Promise(r => setTimeout(r, delay));
+      } else {
+        throw err;
+      }
+    }
+  }
 }
 
 // Parse JSON from Claude output (strips code fences and leading prose if present)

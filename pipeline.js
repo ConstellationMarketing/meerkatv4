@@ -10,6 +10,7 @@ const { scoreArticle } = require('./lib/scoring');
 const { upsertArticle } = require('./lib/supabase');
 const { publishArticle } = require('./lib/github-publish');
 const { checkAndFixFormat } = require('./lib/format-checker');
+const { repairStructuralIssues } = require('./lib/structural-repair');
 
 const client = new Anthropic();
 
@@ -150,6 +151,127 @@ function fixMalformedH3(html) {
     }
     return match;
   });
+}
+
+// Post-processing: force H1 to match the exact keyword
+function lockH1ToKeyword(html, keyword) {
+  if (!keyword) return html;
+  const h1Match = html.match(/<h1>([\s\S]*?)<\/h1>/i);
+  if (!h1Match) return html;
+
+  const h1Text = h1Match[1].replace(/<[^>]+>/g, '').trim();
+  const kwLower = keyword.toLowerCase().trim();
+  const h1Lower = h1Text.toLowerCase();
+
+  // If H1 already matches keyword exactly (case-insensitive), leave it
+  if (h1Lower === kwLower) return html;
+
+  // Allow minor variation: H1 starts with keyword but has appended content (colon, dash, pipe)
+  // or H1 is substantially longer than keyword — replace with exact keyword
+  if (h1Lower.startsWith(kwLower) && h1Text.length > keyword.length * 1.2) {
+    return html.replace(/<h1>[\s\S]*?<\/h1>/i, `<h1>${keyword}</h1>`);
+  }
+
+  // If H1 doesn't even start with the keyword, replace entirely
+  if (!h1Lower.startsWith(kwLower)) {
+    return html.replace(/<h1>[\s\S]*?<\/h1>/i, `<h1>${keyword}</h1>`);
+  }
+
+  return html;
+}
+
+// Post-processing: enforce tagline is max 7 words
+function enforceTaglineLength(html) {
+  // Tagline is a standalone <p><strong>...</strong></p> in the intro (between H1 and first H2)
+  const introMatch = html.match(/(<h1>[\s\S]*?<\/h1>)([\s\S]*?)(<h2>)/i);
+  if (!introMatch) return html;
+
+  const intro = introMatch[2];
+  // Find standalone bold paragraph pattern
+  const taglineRegex = /<p>\s*<strong>([\s\S]*?)<\/strong>\s*<\/p>/i;
+  const taglineMatch = intro.match(taglineRegex);
+  if (!taglineMatch) return html;
+
+  const taglineText = taglineMatch[1].replace(/<[^>]+>/g, '').trim();
+  const words = taglineText.split(/\s+/);
+
+  if (words.length <= 7) return html;
+
+  // Truncate to 7 words
+  let truncated = words.slice(0, 7).join(' ');
+  // Ensure it ends with a period
+  if (!truncated.endsWith('.')) truncated += '.';
+
+  const oldTag = taglineMatch[0];
+  const newTag = `<p><strong>${truncated}</strong></p>`;
+  return html.replace(oldTag, newTag);
+}
+
+// Post-processing: replace forbidden words with safe alternatives
+const FORBIDDEN_WORDS = {
+  'victims': 'those affected',
+  'victim': 'injured person',
+};
+
+function stripForbiddenWords(html) {
+  let result = html;
+  for (const [word, replacement] of Object.entries(FORBIDDEN_WORDS)) {
+    // Word-boundary match, skip content inside heading tags
+    const regex = new RegExp(`\\b${word}\\b`, 'gi');
+    result = result.replace(regex, (match, offset) => {
+      // Check if we're inside a heading tag
+      const before = result.slice(Math.max(0, offset - 200), offset);
+      if (/<h[1-3][^>]*>[^<]*$/i.test(before)) return match;
+      // Preserve original case pattern
+      if (match[0] === match[0].toUpperCase()) {
+        return replacement.charAt(0).toUpperCase() + replacement.slice(1);
+      }
+      return replacement;
+    });
+  }
+  return result;
+}
+
+// Post-processing: remove duplicate link URLs — keep first occurrence only
+function deduplicateLinks(html) {
+  const seenUrls = new Set();
+  return html.replace(/<a\s+([^>]*href="([^"]*)"[^>]*)>([\s\S]*?)<\/a>/gi, (match, attrs, url, text) => {
+    const normalizedUrl = url.toLowerCase().replace(/\/+$/, '');
+    if (seenUrls.has(normalizedUrl)) {
+      // Already linked this URL — keep the text, strip the <a> wrapper
+      return text;
+    }
+    seenUrls.add(normalizedUrl);
+    return match;
+  });
+}
+
+// Post-processing: truncate FAQ answers to max 2 sentences
+function truncateFAQAnswers(html) {
+  // Find the FAQ section — H2 containing "FAQ" or "Frequently Asked"
+  const faqHeaderIdx = html.search(/<h2>[^<]*(FAQ|Frequently Asked)[^<]*<\/h2>/i);
+  if (faqHeaderIdx === -1) return html;
+
+  const beforeFaq = html.slice(0, faqHeaderIdx);
+  let faqSection = html.slice(faqHeaderIdx);
+
+  // Process each <p> after an H3 question within the FAQ section
+  // Pattern: <h3>Question?</h3> followed by <p>Answer text...</p>
+  faqSection = faqSection.replace(
+    /(<h3>[^<]*\?<\/h3>\s*)(<p>)([\s\S]*?)(<\/p>)/gi,
+    (match, h3, pOpen, answerContent, pClose) => {
+      const textOnly = answerContent.replace(/<[^>]+>/g, '').trim();
+      // Split on sentence boundaries (period/exclamation/question followed by space and capital)
+      const sentences = textOnly.match(/[^.!?]*[.!?]+/g);
+      if (!sentences || sentences.length <= 2) return match;
+
+      // Keep first 2 sentences
+      const truncated = sentences.slice(0, 2).join('').trim();
+      return `${h3}${pOpen}${truncated}${pClose}`;
+    }
+  );
+
+  return beforeFaq + faqSection;
 }
 
 // Word count targets by template for quality gating
@@ -310,6 +432,10 @@ async function runPipeline(payload) {
   htmlContent = stripPlaceholders(htmlContent, clientName);
   htmlContent = stripLinksFromHeadings(htmlContent);
   htmlContent = fixMalformedH3(htmlContent);
+  htmlContent = lockH1ToKeyword(htmlContent, keyword);
+  htmlContent = enforceTaglineLength(htmlContent);
+  htmlContent = stripForbiddenWords(htmlContent);
+  htmlContent = truncateFAQAnswers(htmlContent);
 
   // ─── 3. Parallel: external links + internal links + title/meta ─────────────
   console.log('[Pipeline] Running link enrichment and title/meta in parallel...');
@@ -339,7 +465,8 @@ async function runPipeline(payload) {
   try { internalLinks = parseJSON(internalLinksRaw); } catch (e) { console.error('Parse internal links failed:', e.message); }
 
   const allLinks = [...externalLinks, ...internalLinks];
-  const { htmlContent: linkedHTML } = insertLinks(htmlContent, allLinks);
+  let { htmlContent: linkedHTML } = insertLinks(htmlContent, allLinks);
+  linkedHTML = deduplicateLinks(linkedHTML);
 
   // ─── 5. Build full content with SEO header ─────────────────────────────────
   let titleMeta = { titleTag: '', description: '' };
@@ -377,6 +504,11 @@ async function runPipeline(payload) {
         fullContent = stripPlaceholders(fullContent, clientName);
         fullContent = stripLinksFromHeadings(fullContent);
         fullContent = fixMalformedH3(fullContent);
+        fullContent = lockH1ToKeyword(fullContent, keyword);
+        fullContent = enforceTaglineLength(fullContent);
+        fullContent = stripForbiddenWords(fullContent);
+        fullContent = deduplicateLinks(fullContent);
+        fullContent = truncateFAQAnswers(fullContent);
         console.log('[Pipeline] Applied structural fixes from review');
       }
     } else {
@@ -385,6 +517,38 @@ async function runPipeline(payload) {
   } catch (e) {
     console.error('Article review failed:', e.message);
     // Non-fatal — continue with original content
+  }
+
+  // ─── 5c. Targeted structural repair ────────────────────────────────────
+  console.log('[Pipeline] Running targeted structural repair...');
+  try {
+    const repairResult = await repairStructuralIssues(fullContent, {
+      template: template || 'practice',
+      keyword,
+      clientName,
+      website,
+      callClaude
+    });
+    if (repairResult.repairs.length > 0) {
+      fullContent = repairResult.html;
+      console.log(`[Pipeline] Structural repairs applied (${repairResult.repairs.length}):`);
+      repairResult.repairs.forEach(r => console.log(`  ✓ ${r}`));
+      // Re-run deterministic post-processing after repairs
+      fullContent = enforceSingleH1(fullContent);
+      fullContent = stripPlaceholders(fullContent, clientName);
+      fullContent = stripLinksFromHeadings(fullContent);
+      fullContent = fixMalformedH3(fullContent);
+      fullContent = lockH1ToKeyword(fullContent, keyword);
+      fullContent = enforceTaglineLength(fullContent);
+      fullContent = stripForbiddenWords(fullContent);
+      fullContent = deduplicateLinks(fullContent);
+      fullContent = truncateFAQAnswers(fullContent);
+    } else {
+      console.log('[Pipeline] No structural repairs needed');
+    }
+  } catch (e) {
+    console.error('Structural repair failed:', e.message);
+    // Non-fatal — continue with current content
   }
 
   // ─── 6. Legal ethics compliance ───────────────────────────────────────────
@@ -406,6 +570,11 @@ async function runPipeline(payload) {
   cleanedContent = stripPlaceholders(cleanedContent, clientName);
   cleanedContent = stripLinksFromHeadings(cleanedContent);
   cleanedContent = fixMalformedH3(cleanedContent);
+  cleanedContent = lockH1ToKeyword(cleanedContent, keyword);
+  cleanedContent = enforceTaglineLength(cleanedContent);
+  cleanedContent = stripForbiddenWords(cleanedContent);
+  cleanedContent = deduplicateLinks(cleanedContent);
+  cleanedContent = truncateFAQAnswers(cleanedContent);
 
   // ─── 7. Format check + auto-fix ──────────────────────────────────────────
   console.log('[Pipeline] Running format checker...');

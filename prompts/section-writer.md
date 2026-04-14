@@ -15,11 +15,13 @@ This article is a **{{template}}** page. Follow the page-type-specific rules bel
 
 ## Heading Structure
 - The article must contain exactly ONE H1 tag — never more
-- The H1 MUST be the primary keyword or a close natural variation of it. Do not use a creative or editorial headline as the H1.
+- The H1 MUST be the exact primary keyword — no additions, no colons, no subtitles, no explanatory phrases appended. If the keyword is "School Zone Collision," the H1 is "School Zone Collision" — not "School Zone Collision: What You Need to Know."
 - Only the Introduction section (section 1) should include the H1. All other sections must start with H2.
 - All primary sections must use H2 tags
 - Subsections may use H3 tags, but use them sparingly — no more than 3 H3s per section. Prefer inline bold labels or paragraph structure over excessive sub-headings. Not every point needs its own H3.
+- Every H2 section MUST begin with at least 1-2 introductory sentences before any H3 sub-heading. Never go directly from an H2 heading to an H3 heading with no body text in between.
 - Never use H1 more than once regardless of section or context
+- The exact keyword phrasing must be used in the H1 and at least 3 times in body text. Do NOT substitute synonyms for the primary keyword — if the keyword uses "attorney," do not swap it for "lawyer"; if it uses "lawyer," do not swap it for "attorney"
 
 ### Word Choice
 - Prefer one-syllable words when the meaning is the same: "help" not "assist," "show" not "demonstrate," "use" not "utilize," "get" not "obtain," "find" not "identify"
@@ -59,10 +61,10 @@ This article is a **{{template}}** page. Follow the page-type-specific rules bel
 - FAQ sections must not exceed 25% of the total article word count
 - FAQ must contain a maximum of 5 questions
 - Every FAQ question must be derived from topics already covered in the article body — introduce no new subjects
-- FAQ answers must be concise — 2-4 sentences maximum per answer
+- FAQ answers must be concise — 2 sentences maximum per answer. Never exceed 2 sentences. Each answer should be roughly 2 lines of text.
 ## Required Section Template
 Every article must include ALL of the following sections in this order:
-1. Introduction (MINIMUM 200 words, target 250–300 words. This is strictly enforced — introductions under 200 words are unacceptable. Include: the H1, the tagline if practice page, a clear statement of the legal problem, how the firm helps, and a brief preview of what the reader will learn.)
+1. Introduction (MINIMUM 200 words and MINIMUM 3 paragraphs, target 250–300 words. This is strictly enforced — introductions under 200 words or with fewer than 3 paragraphs are unacceptable. Include: the H1, the tagline if practice page, a clear statement of the legal problem, how the firm helps, and a brief preview of what the reader will learn.)
 2. Legal Overview (explain the relevant law or legal context)
 3. Why Choose Us (trust signals only: credentials, experience, results — NOT service descriptions)
 4. What to Expect (the legal process, steps, and timelines — NOT firm services)
@@ -149,7 +151,7 @@ The "What to Expect" section must cover the legal process step by step. Include:
 
 ## CTA — Page-Type-Specific Rules
 - **Practice pages**: Direct CTA with a dedicated heading. Clear ask, brief explanation of legal support. May be assertive and conversion-oriented. Include a "Next Steps" sub-section with 2-3 actionable bullet points (e.g., "Visit [website] to learn more," "Call to schedule a free consultation").
-- **Supporting/resource pages**: Short soft CTA only. 2–4 sentences maximum (50–80 words). No guarantees, no aggressive language. Suggest seeking legal guidance without a hard sell. Use phrasing like "speak with an attorney" — NOT "hire us today" or "call now for a free consultation." Keep it brief and non-promotional. Do NOT use a CTA heading like "Take Action Now" or "Speak With a Lawyer Today" — keep the tone educational and suggestive.
+- **Supporting/resource pages**: Short soft CTA only. 2–4 sentences maximum (50–80 words). No guarantees, no aggressive language. Suggest seeking legal guidance without a hard sell. Use phrasing like "speak with an attorney" — NOT "hire us today" or "call now for a free consultation." Keep it brief and non-promotional. Do NOT use a CTA heading like "Take Action Now" or "Speak With a Lawyer Today" — keep the tone educational and suggestive. The CTA MUST link to the contact page (not the homepage). For supporting pages, do NOT mention the firm by name in any body section — firm references belong only in the CTA.
 
 ## Link Distribution
 - When mentioning legal topics or concepts in body text, these are natural anchor points for links

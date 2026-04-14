@@ -19,6 +19,18 @@ You MUST select URLs ONLY from the client's provided target pages below.
 
 {{internalUrls}}
 
+## ANCHOR TEXT REQUIREMENTS
+- Anchor text must be **3-7 words** — descriptive and keyword/location aligned
+- Good: "Atlanta DUI lawyer", "criminal defense attorney in Marietta", "estate planning process"
+- Bad: "attorney", "lawyer", "click here", "learn more"
+- If the linked page targets a specific location, include that location in the anchor text
+- Anchor text must read naturally in the sentence — not forced
+
+## LINKING DIRECTION RULES
+- **Practice pages** (keyword contains "attorney" or "lawyer"): link ONLY to other practice area pages, Homepage, About Us, or Contact Us. Do NOT link to supporting/resource pages.
+- **Supporting pages**: MUST link to at least one relevant practice area page. May also link to Homepage, About, Contact, or other related supporting pages.
+- **Location consistency**: If the article targets a specific location (e.g., Marietta), link to pages that target the same location. Do NOT link a Marietta page to an Atlanta-specific page unless no location-specific alternative exists.
+
 ## EXCLUSIONS (ABSOLUTE)
 - Prioritize linking to the client's homepage, contact page, and parent practice area page when they are present in the URL pool
 - Do NOT use glossary pages or glossary-style sources

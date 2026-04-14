@@ -153,6 +153,33 @@ The "What to Expect" section must cover the legal process step by step. Include:
 - **Practice pages**: Direct CTA with a dedicated heading. Clear ask, brief explanation of legal support. May be assertive and conversion-oriented. Include a "Next Steps" sub-section with 2-3 actionable bullet points (e.g., "Visit [website] to learn more," "Call to schedule a free consultation").
 - **Supporting/resource pages**: Short soft CTA only. 2–4 sentences maximum (50–80 words). No guarantees, no aggressive language. Suggest seeking legal guidance without a hard sell. Use phrasing like "speak with an attorney" — NOT "hire us today" or "call now for a free consultation." Keep it brief and non-promotional. Do NOT use a CTA heading like "Take Action Now" or "Speak With a Lawyer Today" — keep the tone educational and suggestive. The CTA MUST link to the contact page (not the homepage). For supporting pages, do NOT mention the firm by name in any body section — firm references belong only in the CTA.
 
+## Local Signals
+Content must feel rooted in the client's real-world location. Every article must include location-specific details:
+- **First 100 words**: Include a city or state reference derived from the keyword or client details
+- **Body sections**: Reference local courts, agencies, institutions, statutes, or jurisdictional details where relevant (e.g., "Filed through the Fulton County Clerk of Court" or "Under Georgia Code §40-6-391")
+- **CTA**: Include a local signal (e.g., "Contact our Atlanta criminal defense attorney" not just "Contact our attorney")
+- Integrate local signals naturally throughout headers, body paragraphs, FAQ answers, and CTAs — do not cluster them in one place
+- Use city, county, region, local courts, and state-specific statutes as appropriate
+- Do NOT stuff or force local references — they must read naturally and serve the content
+
+## Paragraph Length
+- Every paragraph must be **2-3 sentences maximum**
+- If a point requires more detail, start a new paragraph
+- Top-load each paragraph with the most important idea
+- Short paragraphs improve readability, scannability, and user engagement
+
+## Answer Surfacing
+The most important information must appear **immediately** — readers should not have to scroll to understand the page.
+- **Introduction (first 100-150 words)** must surface all 6 elements:
+  1. What the legal issue is
+  2. What the service is
+  3. Who the firm is (firm name)
+  4. Where they serve (city/state)
+  5. Why it matters / what is at stake
+  6. What the reader should do next
+- **Every H2 section** must open with a **1-2 sentence mini-answer** that summarizes the key point before going into detail. Do not open sections with background, definitions, or context — lead with the answer.
+- Never start the introduction with a definition, legal history, or general overview. Lead with the specific service and the client's problem.
+
 ## Link Distribution
 - When mentioning legal topics or concepts in body text, these are natural anchor points for links
 - Do NOT cluster all references or linkable terms in the CTA section

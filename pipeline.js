@@ -274,6 +274,58 @@ function truncateFAQAnswers(html) {
   return beforeFaq + faqSection;
 }
 
+// Post-processing: split paragraphs with 4+ sentences into max 3 sentences each
+function splitLongParagraphs(html) {
+  return html.replace(/<p>([\s\S]*?)<\/p>/gi, (match, content) => {
+    // Skip very short paragraphs or those that are just a tagline/bold phrase
+    const textOnly = content.replace(/<[^>]+>/g, '').trim();
+    if (textOnly.length < 50) return match;
+
+    // Split on sentence boundaries: period/exclamation/question followed by space
+    const sentences = textOnly.match(/[^.!?]*[.!?]+/g);
+    if (!sentences || sentences.length <= 3) return match;
+
+    // Group into chunks of 3 sentences max
+    const paragraphs = [];
+    for (let i = 0; i < sentences.length; i += 3) {
+      const chunk = sentences.slice(i, i + 3).join('').trim();
+      if (chunk) paragraphs.push(`<p>${chunk}</p>`);
+    }
+    return paragraphs.join('\n');
+  });
+}
+
+// Post-processing: strip links to legal directories (Justia, FindLaw, Avvo, etc.)
+const BLOCKED_DOMAINS = [
+  'justia.com', 'findlaw.com', 'avvo.com', 'lawyers.com',
+  'martindale.com', 'nolo.com', 'lawinfo.com'
+];
+
+function stripDirectoryLinks(html) {
+  return html.replace(/<a\s+([^>]*href="([^"]*)"[^>]*)>([\s\S]*?)<\/a>/gi, (match, attrs, url, text) => {
+    const urlLower = url.toLowerCase();
+    if (BLOCKED_DOMAINS.some(domain => urlLower.includes(domain))) {
+      return text; // Keep text, strip link
+    }
+    return match;
+  });
+}
+
+// Post-processing: strip internal links with anchor text under 3 words (too generic)
+function enforceAnchorTextLength(html) {
+  return html.replace(/<a\s+([^>]*href="([^"]*)"[^>]*)>([\s\S]*?)<\/a>/gi, (match, attrs, url, text) => {
+    // Only check internal links (skip external)
+    if (/class="legal-reference"/i.test(attrs)) {
+      const plainText = text.replace(/<[^>]+>/g, '').trim();
+      const wordCount = plainText.split(/\s+/).length;
+      if (wordCount < 3) {
+        return text; // Too short/generic — strip the link, keep text
+      }
+    }
+    return match;
+  });
+}
+
 // Word count targets by template for quality gating
 const TEMPLATE_WORD_TARGETS = {
   'Practice Page': 2007,
@@ -436,6 +488,7 @@ async function runPipeline(payload) {
   htmlContent = enforceTaglineLength(htmlContent);
   htmlContent = stripForbiddenWords(htmlContent);
   htmlContent = truncateFAQAnswers(htmlContent);
+  htmlContent = splitLongParagraphs(htmlContent);
 
   // ─── 3. Parallel: external links + internal links + title/meta ─────────────
   console.log('[Pipeline] Running link enrichment and title/meta in parallel...');
@@ -467,6 +520,8 @@ async function runPipeline(payload) {
   const allLinks = [...externalLinks, ...internalLinks];
   let { htmlContent: linkedHTML } = insertLinks(htmlContent, allLinks);
   linkedHTML = deduplicateLinks(linkedHTML);
+  linkedHTML = stripDirectoryLinks(linkedHTML);
+  linkedHTML = enforceAnchorTextLength(linkedHTML);
 
   // ─── 5. Build full content with SEO header ─────────────────────────────────
   let titleMeta = { titleTag: '', description: '' };
@@ -509,6 +564,9 @@ async function runPipeline(payload) {
         fullContent = stripForbiddenWords(fullContent);
         fullContent = deduplicateLinks(fullContent);
         fullContent = truncateFAQAnswers(fullContent);
+        fullContent = splitLongParagraphs(fullContent);
+        fullContent = stripDirectoryLinks(fullContent);
+        fullContent = enforceAnchorTextLength(fullContent);
         console.log('[Pipeline] Applied structural fixes from review');
       }
     } else {
@@ -543,6 +601,9 @@ async function runPipeline(payload) {
       fullContent = stripForbiddenWords(fullContent);
       fullContent = deduplicateLinks(fullContent);
       fullContent = truncateFAQAnswers(fullContent);
+      fullContent = splitLongParagraphs(fullContent);
+      fullContent = stripDirectoryLinks(fullContent);
+      fullContent = enforceAnchorTextLength(fullContent);
     } else {
       console.log('[Pipeline] No structural repairs needed');
     }
@@ -575,6 +636,9 @@ async function runPipeline(payload) {
   cleanedContent = stripForbiddenWords(cleanedContent);
   cleanedContent = deduplicateLinks(cleanedContent);
   cleanedContent = truncateFAQAnswers(cleanedContent);
+  cleanedContent = splitLongParagraphs(cleanedContent);
+  cleanedContent = stripDirectoryLinks(cleanedContent);
+  cleanedContent = enforceAnchorTextLength(cleanedContent);
 
   // ─── 7. Format check + auto-fix ──────────────────────────────────────────
   console.log('[Pipeline] Running format checker...');

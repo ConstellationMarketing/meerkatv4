@@ -10,6 +10,7 @@ const { scoreArticle } = require('./lib/scoring');
 const { upsertArticle } = require('./lib/supabase');
 const { publishArticle } = require('./lib/github-publish');
 const { checkAndFixFormat } = require('./lib/format-checker');
+const { repairStructuralIssues } = require('./lib/structural-repair');
 
 const client = new Anthropic();
 
@@ -516,6 +517,38 @@ async function runPipeline(payload) {
   } catch (e) {
     console.error('Article review failed:', e.message);
     // Non-fatal — continue with original content
+  }
+
+  // ─── 5c. Targeted structural repair ────────────────────────────────────
+  console.log('[Pipeline] Running targeted structural repair...');
+  try {
+    const repairResult = await repairStructuralIssues(fullContent, {
+      template: template || 'practice',
+      keyword,
+      clientName,
+      website,
+      callClaude
+    });
+    if (repairResult.repairs.length > 0) {
+      fullContent = repairResult.html;
+      console.log(`[Pipeline] Structural repairs applied (${repairResult.repairs.length}):`);
+      repairResult.repairs.forEach(r => console.log(`  ✓ ${r}`));
+      // Re-run deterministic post-processing after repairs
+      fullContent = enforceSingleH1(fullContent);
+      fullContent = stripPlaceholders(fullContent, clientName);
+      fullContent = stripLinksFromHeadings(fullContent);
+      fullContent = fixMalformedH3(fullContent);
+      fullContent = lockH1ToKeyword(fullContent, keyword);
+      fullContent = enforceTaglineLength(fullContent);
+      fullContent = stripForbiddenWords(fullContent);
+      fullContent = deduplicateLinks(fullContent);
+      fullContent = truncateFAQAnswers(fullContent);
+    } else {
+      console.log('[Pipeline] No structural repairs needed');
+    }
+  } catch (e) {
+    console.error('Structural repair failed:', e.message);
+    // Non-fatal — continue with current content
   }
 
   // ─── 6. Legal ethics compliance ───────────────────────────────────────────

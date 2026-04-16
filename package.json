@@ -1,6 +1,6 @@
 {
   "name": "meerkat-service",
-  "version": "4.0.3",
+  "version": "4.0.4",
   "description": "Claude-powered legal article generation service",
   "main": "server.js",
   "scripts": {
@@ -10,7 +10,8 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
     "@supabase/supabase-js": "^2.49.1",
+    "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "dotenv": "^16.4.7"
+    "nodemailer": "^8.0.4"
   }
 }

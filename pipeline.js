@@ -470,6 +470,30 @@ function hasStatuteCitation(html) {
   return statutePatterns.some(p => p.test(textOnly));
 }
 
+// Post-processing: cap H3s at 2 per section — convert excess to bold paragraph labels
+function capH3Density(html) {
+  const parts = html.split(/(<h2>)/i);
+  let result = parts[0];
+
+  for (let i = 1; i < parts.length; i += 2) {
+    const h2Tag = parts[i];
+    const sectionContent = parts[i + 1] || '';
+    let h3Count = 0;
+
+    const fixed = sectionContent.replace(/<h3>([\s\S]*?)<\/h3>/gi, (match, heading) => {
+      h3Count++;
+      if (h3Count > 2) {
+        // Convert to bold paragraph label instead of H3
+        return `<p><strong>${heading.trim()}</strong></p>`;
+      }
+      return match;
+    });
+
+    result += h2Tag + fixed;
+  }
+  return result;
+}
+
 // Word count targets by template for quality gating
 const TEMPLATE_WORD_TARGETS = {
   'Practice Page': 2007,
@@ -635,6 +659,7 @@ async function runPipeline(payload) {
   htmlContent = truncateFAQAnswers(htmlContent);
   htmlContent = splitLongParagraphs(htmlContent);
   htmlContent = stripPhoneNumbers(htmlContent);
+  htmlContent = capH3Density(htmlContent);
 
   // ─── 3. Parallel: external links + internal links + title/meta ─────────────
   console.log('[Pipeline] Running link enrichment and title/meta in parallel...');
@@ -691,6 +716,7 @@ async function runPipeline(payload) {
   linkedHTML = deduplicatePhrases(linkedHTML);
   linkedHTML = stripPhoneNumbers(linkedHTML);
   linkedHTML = fixCTALinks(linkedHTML, website);
+  linkedHTML = capH3Density(linkedHTML);
 
   // ─── 5. Build full content with SEO header ─────────────────────────────────
   let titleMeta = { titleTag: '', description: '' };
@@ -739,6 +765,7 @@ async function runPipeline(payload) {
         fullContent = deduplicatePhrases(fullContent);
         fullContent = stripPhoneNumbers(fullContent);
         fullContent = fixCTALinks(fullContent, website);
+        fullContent = capH3Density(fullContent);
         console.log('[Pipeline] Applied structural fixes from review');
       }
     } else {
@@ -779,6 +806,7 @@ async function runPipeline(payload) {
       fullContent = deduplicatePhrases(fullContent);
       fullContent = stripPhoneNumbers(fullContent);
       fullContent = fixCTALinks(fullContent, website);
+      fullContent = capH3Density(fullContent);
     } else {
       console.log('[Pipeline] No structural repairs needed');
     }
@@ -817,6 +845,7 @@ async function runPipeline(payload) {
   cleanedContent = deduplicatePhrases(cleanedContent);
   cleanedContent = stripPhoneNumbers(cleanedContent);
   cleanedContent = fixCTALinks(cleanedContent, website);
+  cleanedContent = capH3Density(cleanedContent);
 
   // ─── 6b. Validate external links and statute citations ────────────────────
   const externalLinkCount = countExternalLinks(cleanedContent);

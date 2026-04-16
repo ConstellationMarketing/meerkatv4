@@ -614,6 +614,26 @@ async function runPipeline(payload) {
   try { externalLinks = parseJSON(externalLinksRaw); } catch (e) { console.error('Parse external links failed:', e.message); }
   try { internalLinks = parseJSON(internalLinksRaw); } catch (e) { console.error('Parse internal links failed:', e.message); }
 
+  // ─── 4a. Retry external links if none returned ────────────────────────────
+  if (!Array.isArray(externalLinks) || externalLinks.length === 0) {
+    console.log('[Pipeline] No external links from first attempt — retrying with Sonnet...');
+    try {
+      const retryRaw = await callClaude(
+        ...Object.values(parsePrompt(prompts['external-links'], { htmlContent })),
+        'claude-sonnet-4-6'
+      );
+      const retryLinks = parseJSON(retryRaw);
+      if (Array.isArray(retryLinks) && retryLinks.length > 0) {
+        externalLinks = retryLinks;
+        console.log(`[Pipeline] Retry succeeded: ${externalLinks.length} external link(s)`);
+      } else {
+        console.warn('[Pipeline] ⚠ Retry returned 0 external links — article will lack authoritative sources');
+      }
+    } catch (err) {
+      console.error('[Pipeline] External links retry failed:', err.message);
+    }
+  }
+
   const allLinks = [...externalLinks, ...internalLinks];
   let { htmlContent: linkedHTML } = insertLinks(htmlContent, allLinks);
   linkedHTML = deduplicateLinks(linkedHTML);
@@ -745,12 +765,12 @@ async function runPipeline(payload) {
   const externalLinkCount = countExternalLinks(cleanedContent);
   const hasStatutes = hasStatuteCitation(cleanedContent);
   if (externalLinkCount === 0) {
-    console.warn('[Pipeline] ⚠ No external authoritative links found in article');
+    console.warn('[Pipeline] ⚠ No external links after retry — editor must add manually');
   } else {
     console.log(`[Pipeline] External links: ${externalLinkCount}`);
   }
   if (!hasStatutes) {
-    console.warn('[Pipeline] ⚠ No specific statute citations found in article');
+    console.warn('[Pipeline] ⚠ No statute citation after repair attempt — editor must add manually');
   }
 
   // ─── 7. Format check + auto-fix ──────────────────────────────────────────
@@ -760,12 +780,12 @@ async function runPipeline(payload) {
     console.log(`[Pipeline] Format auto-fixes applied: ${formatResult.fixes.join(', ')}`);
     cleanedContent = formatResult.html;
   }
-  // Add external link and statute warnings to format warnings
+  // Add external link and statute warnings to format warnings (pipeline tried to fix these — warning means it couldn't)
   if (externalLinkCount === 0) {
-    formatResult.warnings.push('No external links to authoritative sources');
+    formatResult.warnings.push('REQUIRED: No external links to authoritative sources — pipeline retry failed, editor must add 2-3 manually');
   }
   if (!hasStatutes) {
-    formatResult.warnings.push('No specific statute citations found — editor should verify jurisdiction-specific references');
+    formatResult.warnings.push('REQUIRED: No jurisdiction-specific statute citations — pipeline repair failed, editor must add at least one');
   }
 
   if (formatResult.warnings.length > 0) {

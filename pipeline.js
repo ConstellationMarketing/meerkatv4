@@ -370,6 +370,59 @@ function enforceAnchorTextLength(html) {
   });
 }
 
+// Post-processing: detect and remove duplicate phrases within paragraphs
+function deduplicatePhrases(html) {
+  return html.replace(/<p>([\s\S]*?)<\/p>/gi, (match, content) => {
+    const textOnly = content.replace(/<[^>]+>/g, '').trim();
+    if (textOnly.length < 20) return match;
+
+    // Detect repeated phrases: 2-6 word sequences that appear back-to-back
+    // Handles "from day one from day one", "clear guidance, clear guidance", etc.
+    let fixed = textOnly;
+    // Match phrase repeated with optional comma/space between
+    fixed = fixed.replace(/\b((?:\w+\s+){1,5}\w+)[\s,]+\1\b/gi, '$1');
+    // Match single repeated words: "help help", "the the"
+    fixed = fixed.replace(/\b(\w+)\s+\1\b/gi, '$1');
+
+    if (fixed !== textOnly) {
+      // Replace in the original HTML-containing content, preserving tags
+      // Use the text-only version since dedup may shift positions
+      return `<p>${fixed}</p>`;
+    }
+    return match;
+  });
+}
+
+// Post-processing: verify external links exist, warn if missing
+function countExternalLinks(html) {
+  const externalLinkRegex = /<a\s+[^>]*class="legal-reference"[^>]*>/gi;
+  const matches = html.match(externalLinkRegex) || [];
+  return matches.length;
+}
+
+// Post-processing: check for statute citations in the article
+function hasStatuteCitation(html) {
+  const textOnly = html.replace(/<[^>]+>/g, ' ');
+  // Match common statute patterns: §, Section ###, Code §, state code references
+  const statutePatterns = [
+    /§\s*[\d]/, // § followed by number
+    /\bSection\s+\d+[\d.()-]*/i, // Section 123
+    /\bCode\s+§/i, // Code §
+    /\bChapter\s+\d+/i, // Chapter 7
+    /\bTitle\s+\d+/i, // Title 42
+    /\d+\s+U\.S\.C\./i, // 42 U.S.C.
+    /\bO\.C\.G\.A\.\s*§/i, // Georgia code
+    /\bRev\.\s*Stat\./i, // Revised Statutes
+    /\bPenal\s+Code\s+§/i, // Penal Code §
+    /\bVeh\.\s*Code\s+§/i, // Vehicle Code §
+    /\bFam\.\s*Code\s+§/i, // Family Code §
+    /\bCiv\.\s*Code\s+§/i, // Civil Code §
+    /\bBus\.\s*&\s*Prof\.\s*Code\s+§/i, // Business & Professions Code §
+    /\bAnn\.\s*Code\s+§/i, // Annotated Code §
+  ];
+  return statutePatterns.some(p => p.test(textOnly));
+}
+
 // Word count targets by template for quality gating
 const TEMPLATE_WORD_TARGETS = {
   'Practice Page': 2007,
@@ -566,6 +619,7 @@ async function runPipeline(payload) {
   linkedHTML = deduplicateLinks(linkedHTML);
   linkedHTML = stripDirectoryLinks(linkedHTML);
   linkedHTML = enforceAnchorTextLength(linkedHTML);
+  linkedHTML = deduplicatePhrases(linkedHTML);
 
   // ─── 5. Build full content with SEO header ─────────────────────────────────
   let titleMeta = { titleTag: '', description: '' };
@@ -611,6 +665,7 @@ async function runPipeline(payload) {
         fullContent = splitLongParagraphs(fullContent);
         fullContent = stripDirectoryLinks(fullContent);
         fullContent = enforceAnchorTextLength(fullContent);
+        fullContent = deduplicatePhrases(fullContent);
         console.log('[Pipeline] Applied structural fixes from review');
       }
     } else {
@@ -648,6 +703,7 @@ async function runPipeline(payload) {
       fullContent = splitLongParagraphs(fullContent);
       fullContent = stripDirectoryLinks(fullContent);
       fullContent = enforceAnchorTextLength(fullContent);
+      fullContent = deduplicatePhrases(fullContent);
     } else {
       console.log('[Pipeline] No structural repairs needed');
     }
@@ -683,6 +739,19 @@ async function runPipeline(payload) {
   cleanedContent = splitLongParagraphs(cleanedContent);
   cleanedContent = stripDirectoryLinks(cleanedContent);
   cleanedContent = enforceAnchorTextLength(cleanedContent);
+  cleanedContent = deduplicatePhrases(cleanedContent);
+
+  // ─── 6b. Validate external links and statute citations ────────────────────
+  const externalLinkCount = countExternalLinks(cleanedContent);
+  const hasStatutes = hasStatuteCitation(cleanedContent);
+  if (externalLinkCount === 0) {
+    console.warn('[Pipeline] ⚠ No external authoritative links found in article');
+  } else {
+    console.log(`[Pipeline] External links: ${externalLinkCount}`);
+  }
+  if (!hasStatutes) {
+    console.warn('[Pipeline] ⚠ No specific statute citations found in article');
+  }
 
   // ─── 7. Format check + auto-fix ──────────────────────────────────────────
   console.log('[Pipeline] Running format checker...');
@@ -691,6 +760,14 @@ async function runPipeline(payload) {
     console.log(`[Pipeline] Format auto-fixes applied: ${formatResult.fixes.join(', ')}`);
     cleanedContent = formatResult.html;
   }
+  // Add external link and statute warnings to format warnings
+  if (externalLinkCount === 0) {
+    formatResult.warnings.push('No external links to authoritative sources');
+  }
+  if (!hasStatutes) {
+    formatResult.warnings.push('No specific statute citations found — editor should verify jurisdiction-specific references');
+  }
+
   if (formatResult.warnings.length > 0) {
     console.log(`[Pipeline] Format warnings (${formatResult.warnings.length}):`);
     formatResult.warnings.forEach(w => console.log(`  ⚠ ${w}`));

@@ -275,6 +275,53 @@ function deduplicateLinks(html) {
   });
 }
 
+// Post-processing: strip phone numbers from article body
+function stripPhoneNumbers(html) {
+  // Match common US phone formats, ordered from most specific to least
+  return html.replace(/<p>([\s\S]*?)<\/p>/gi, (match, content) => {
+    const cleaned = content
+      .replace(/1[-.\s]?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g, '')  // 1-800-555-1234, 1 (800) 555-1234
+      .replace(/\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}/g, '')             // (555) 555-5555, 555-555-5555, 555.555.5555
+      .replace(/\s+(or|and|at)\s+[.,]/g, '.')                         // Clean dangling conjunctions
+      .replace(/\s+(or|and|at)\s*$/g, '')                             // Clean trailing conjunctions
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+    if (cleaned !== content) {
+      return `<p>${cleaned}</p>`;
+    }
+    return match;
+  });
+}
+
+// Post-processing: replace homepage links with contact page links in CTA sections
+function fixCTALinks(html, website) {
+  if (!website) return html;
+  const domain = website.replace(/\/+$/, '');
+  const homepage = domain;
+  const homepageSlash = domain + '/';
+  const contactUrl = domain + '/contact';
+
+  // Find the last H2 section that isn't FAQ — that's the CTA
+  const h2Parts = html.split(/<h2>/i);
+  for (let i = h2Parts.length - 1; i >= 1; i--) {
+    const heading = (h2Parts[i].match(/^([^<]*)<\/h2>/) || [])[1] || '';
+    if (/FAQ|Frequently/i.test(heading)) continue;
+
+    // This is the CTA section — replace homepage links with contact page
+    const original = h2Parts[i];
+    const fixed = original.replace(
+      new RegExp(`href="${homepage.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/?\\s*"`, 'gi'),
+      `href="${contactUrl}"`
+    );
+    if (fixed !== original) {
+      h2Parts[i] = fixed;
+      return h2Parts.map((p, idx) => idx === 0 ? p : '<h2>' + p).join('');
+    }
+    break;
+  }
+  return html;
+}
+
 // Post-processing: truncate FAQ answers to max 2 sentences
 function truncateFAQAnswers(html) {
   // Find the FAQ section — H2 containing "FAQ" or "Frequently Asked"
@@ -586,6 +633,7 @@ async function runPipeline(payload) {
   htmlContent = stripForbiddenWords(htmlContent);
   htmlContent = truncateFAQAnswers(htmlContent);
   htmlContent = splitLongParagraphs(htmlContent);
+  htmlContent = stripPhoneNumbers(htmlContent);
 
   // ─── 3. Parallel: external links + internal links + title/meta ─────────────
   console.log('[Pipeline] Running link enrichment and title/meta in parallel...');
@@ -640,6 +688,8 @@ async function runPipeline(payload) {
   linkedHTML = stripDirectoryLinks(linkedHTML);
   linkedHTML = enforceAnchorTextLength(linkedHTML);
   linkedHTML = deduplicatePhrases(linkedHTML);
+  linkedHTML = stripPhoneNumbers(linkedHTML);
+  linkedHTML = fixCTALinks(linkedHTML, website);
 
   // ─── 5. Build full content with SEO header ─────────────────────────────────
   let titleMeta = { titleTag: '', description: '' };
@@ -686,6 +736,8 @@ async function runPipeline(payload) {
         fullContent = stripDirectoryLinks(fullContent);
         fullContent = enforceAnchorTextLength(fullContent);
         fullContent = deduplicatePhrases(fullContent);
+        fullContent = stripPhoneNumbers(fullContent);
+        fullContent = fixCTALinks(fullContent, website);
         console.log('[Pipeline] Applied structural fixes from review');
       }
     } else {
@@ -724,6 +776,8 @@ async function runPipeline(payload) {
       fullContent = stripDirectoryLinks(fullContent);
       fullContent = enforceAnchorTextLength(fullContent);
       fullContent = deduplicatePhrases(fullContent);
+      fullContent = stripPhoneNumbers(fullContent);
+      fullContent = fixCTALinks(fullContent, website);
     } else {
       console.log('[Pipeline] No structural repairs needed');
     }
@@ -760,6 +814,8 @@ async function runPipeline(payload) {
   cleanedContent = stripDirectoryLinks(cleanedContent);
   cleanedContent = enforceAnchorTextLength(cleanedContent);
   cleanedContent = deduplicatePhrases(cleanedContent);
+  cleanedContent = stripPhoneNumbers(cleanedContent);
+  cleanedContent = fixCTALinks(cleanedContent, website);
 
   // ─── 6b. Validate external links and statute citations ────────────────────
   const externalLinkCount = countExternalLinks(cleanedContent);

@@ -18,7 +18,7 @@ This article is a **{{template}}** page. Follow the page-type-specific rules bel
 - The H1 MUST be the exact primary keyword — no additions, no colons, no subtitles, no explanatory phrases appended. If the keyword is "School Zone Collision," the H1 is "School Zone Collision" — not "School Zone Collision: What You Need to Know."
 - Only the Introduction section (section 1) should include the H1. All other sections must start with H2.
 - All primary sections must use H2 tags
-- Subsections may use H3 tags, but use them sparingly — no more than 3 H3s per section. Prefer inline bold labels or paragraph structure over excessive sub-headings. Not every point needs its own H3.
+- Subsections may use H3 tags, but no more than 2 H3s per section. Most sections should have 0-1 H3s. Prefer inline bold labels or paragraph structure over sub-headings. Do NOT use an H3 for every point in a list — use bold labels or numbered lists instead.
 - Every H2 section MUST begin with at least 1-2 introductory sentences before any H3 sub-heading. Never go directly from an H2 heading to an H3 heading with no body text in between.
 - Never use H1 more than once regardless of section or context
 - The exact keyword phrasing must be used in the H1 and at least 3 times in body text. Do NOT substitute synonyms for the primary keyword — if the keyword uses "attorney," do not swap it for "lawyer"; if it uses "lawyer," do not swap it for "attorney"
@@ -65,11 +65,11 @@ This article is a **{{template}}** page. Follow the page-type-specific rules bel
 ## Required Section Template
 Every article must include ALL of the following sections in this order:
 1. Introduction (MINIMUM 200 words and MINIMUM 3 paragraphs, target 250–300 words. This is strictly enforced — introductions under 200 words or with fewer than 3 paragraphs are unacceptable. Include: the H1, the tagline if practice page, a clear statement of the legal problem, how the firm helps, and a brief preview of what the reader will learn.)
-2. Legal Overview (explain the relevant law or legal context)
+2. How We Can Help (Problem → Agitation → Solution: expand on the problem, show how the firm solves it — NOT a repeat of the introduction)
 3. Why Choose Us (trust signals only: credentials, experience, results — NOT service descriptions)
 4. What to Expect (the legal process, steps, and timelines — NOT firm services)
-5. CTA (dedicated heading, clear call to action, brief explanation of legal support available)
-6. FAQ (derived from article body, capped at 25% of word count, max 5 questions)
+5. CTA (dedicated heading, clear call to action, MUST link to the contact page not the homepage)
+6. FAQ (derived from article body, capped at 25% of word count, max 5 questions, each answer exactly 2 sentences)
 
 Never omit any of these sections regardless of keyword or article type.
 
@@ -150,7 +150,7 @@ The "What to Expect" section must cover the legal process step by step. Include:
 - **Practice pages** MUST include "Why Choose Us" as a dedicated section.
 
 ## CTA — Page-Type-Specific Rules
-- **Practice pages**: Direct CTA with a dedicated heading. Clear ask, brief explanation of legal support. May be assertive and conversion-oriented. Include a "Next Steps" sub-section with 2-3 actionable bullet points (e.g., "Visit [website] to learn more," "Call to schedule a free consultation").
+- **Practice pages**: Direct CTA with a dedicated heading. Clear ask, brief explanation of legal support. May be assertive and conversion-oriented. The CTA MUST link to the contact page ({{website}}/contact), NOT the homepage. Include a "Next Steps" sub-section with 2-3 actionable bullet points (e.g., "Visit {{website}}/contact to get started," "Call to schedule a free consultation").
 - **Supporting/resource pages**: Short soft CTA only. 2–4 sentences maximum (50–80 words). No guarantees, no aggressive language. Suggest seeking legal guidance without a hard sell. Use phrasing like "speak with an attorney" — NOT "hire us today" or "call now for a free consultation." Keep it brief and non-promotional. Do NOT use a CTA heading like "Take Action Now" or "Speak With a Lawyer Today" — keep the tone educational and suggestive. The CTA MUST link to the contact page (not the homepage). For supporting pages, do NOT mention the firm by name in any body section — firm references belong only in the CTA.
 
 ## Local Signals
@@ -188,7 +188,7 @@ The most important information must appear **immediately** — readers should no
 ## Internal Link Requirements
 - Every article must include at least 3 internal links to pages on the client's website ({{website}})
 - Link to at least one related practice area page (e.g., if the article is about DUI, link to a drug charges or license suspension page if one exists)
-- Link to the contact page or homepage at least once
+- Link to the contact page at least once (prefer {{website}}/contact over the homepage)
 - Use natural anchor text — link relevant phrases in the body text, not raw URLs
 - Do NOT place all internal links in the CTA section — spread them across the article body
 
@@ -234,4 +234,7 @@ USER: ## SECTION DETAILS
 articleid: {{articleId}}
 keyword: {{keyword}}
 sectionNumber: {{sectionNumber}}
+sectionName: {{sectionName}}
 Instructions: {{details}}
+
+IMPORTANT: If a sectionName is provided above, you MUST use it as the exact H2 heading for this section. Do not rename, rephrase, or "improve" the heading — use the section name verbatim. The only exception is sectionNumber 1 (Introduction), which uses H1 instead of H2.

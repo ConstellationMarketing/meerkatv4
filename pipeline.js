@@ -527,7 +527,8 @@ async function generateSection(payload, section) {
     articleId: payload.articleId,
     template: payload.template || 'practice',
     sectionNumber: section.sectionNumber,
-    details: section.details,
+    sectionName: section.name || section.title || '',
+    details: section.details || section.description || '',
     wordCount: section.wordCount
   };
 

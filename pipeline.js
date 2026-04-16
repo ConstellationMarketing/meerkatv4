@@ -182,29 +182,58 @@ function lockH1ToKeyword(html, keyword) {
 
 // Post-processing: enforce tagline is max 7 words
 function enforceTaglineLength(html) {
-  // Tagline is a standalone <p><strong>...</strong></p> in the intro (between H1 and first H2)
+  // Tagline is a bold-dominant short paragraph in the intro (between H1 and first H2)
   const introMatch = html.match(/(<h1>[\s\S]*?<\/h1>)([\s\S]*?)(<h2>)/i);
   if (!introMatch) return html;
 
   const intro = introMatch[2];
-  // Find standalone bold paragraph pattern
-  const taglineRegex = /<p>\s*<strong>([\s\S]*?)<\/strong>\s*<\/p>/i;
+  // Match any <p> that contains <strong> and is primarily bold text
+  // Handles: <p><strong>...</strong></p>, <p><em><strong>...</strong></em></p>,
+  // <p> <strong>...</strong> </p>, etc.
+  const taglineRegex = /<p[^>]*>\s*(?:<[^>]+>\s*)*<strong>([\s\S]*?)<\/strong>(?:\s*<\/[^>]+>)*\s*<\/p>/i;
   const taglineMatch = intro.match(taglineRegex);
   if (!taglineMatch) return html;
 
   const taglineText = taglineMatch[1].replace(/<[^>]+>/g, '').trim();
-  const words = taglineText.split(/\s+/);
+  const words = taglineText.split(/\s+/).filter(w => w.length > 0);
 
   if (words.length <= 7) return html;
 
   // Truncate to 7 words
   let truncated = words.slice(0, 7).join(' ');
   // Ensure it ends with a period
-  if (!truncated.endsWith('.')) truncated += '.';
+  if (!truncated.match(/[.!?]$/)) truncated += '.';
 
   const oldTag = taglineMatch[0];
   const newTag = `<p><strong>${truncated}</strong></p>`;
   return html.replace(oldTag, newTag);
+}
+
+// Shared sentence splitter that handles legal abbreviations (U.S., D.U.I., etc.)
+function splitSentences(text) {
+  // Protect common abbreviations from being treated as sentence endings
+  const protected_ = text
+    .replace(/\bU\.S\./g, 'U\x00S\x00')
+    .replace(/\bD\.U\.I\./g, 'D\x00U\x00I\x00')
+    .replace(/\bD\.W\.I\./g, 'D\x00W\x00I\x00')
+    .replace(/\bD\.C\./g, 'D\x00C\x00')
+    .replace(/\bN\.J\./g, 'N\x00J\x00')
+    .replace(/\bN\.Y\./g, 'N\x00Y\x00')
+    .replace(/\bv\./g, 'v\x00')
+    .replace(/\bvs\./g, 'vs\x00')
+    .replace(/\bDr\./g, 'Dr\x00')
+    .replace(/\bMr\./g, 'Mr\x00')
+    .replace(/\bMrs\./g, 'Mrs\x00')
+    .replace(/\bSt\./g, 'St\x00')
+    .replace(/\bJr\./g, 'Jr\x00')
+    .replace(/\bSr\./g, 'Sr\x00')
+    .replace(/\be\.g\./g, 'e\x00g\x00')
+    .replace(/\bi\.e\./g, 'i\x00e\x00')
+    .replace(/§\s*[\d.-]+/g, m => m.replace(/\./g, '\x00'));
+
+  const sentences = protected_.match(/[^.!?]*[.!?]+/g);
+  if (!sentences) return null;
+  return sentences.map(s => s.replace(/\x00/g, '.'));
 }
 
 // Post-processing: replace forbidden words with safe alternatives
@@ -255,14 +284,13 @@ function truncateFAQAnswers(html) {
   const beforeFaq = html.slice(0, faqHeaderIdx);
   let faqSection = html.slice(faqHeaderIdx);
 
-  // Process each <p> after an H3 question within the FAQ section
-  // Pattern: <h3>Question?</h3> followed by <p>Answer text...</p>
+  // Process each <p> after an H3 within the FAQ section
+  // Relaxed: H3 doesn't need to end with ? (some questions are phrased as statements)
   faqSection = faqSection.replace(
-    /(<h3>[^<]*\?<\/h3>\s*)(<p>)([\s\S]*?)(<\/p>)/gi,
+    /(<h3>[^<]*<\/h3>\s*)(<p>)([\s\S]*?)(<\/p>)/gi,
     (match, h3, pOpen, answerContent, pClose) => {
       const textOnly = answerContent.replace(/<[^>]+>/g, '').trim();
-      // Split on sentence boundaries (period/exclamation/question followed by space and capital)
-      const sentences = textOnly.match(/[^.!?]*[.!?]+/g);
+      const sentences = splitSentences(textOnly);
       if (!sentences || sentences.length <= 2) return match;
 
       // Keep first 2 sentences
@@ -281,11 +309,27 @@ function splitLongParagraphs(html) {
     const textOnly = content.replace(/<[^>]+>/g, '').trim();
     if (textOnly.length < 50) return match;
 
-    // Split on sentence boundaries: period/exclamation/question followed by space
-    const sentences = textOnly.match(/[^.!?]*[.!?]+/g);
+    // Check sentence count using abbreviation-aware splitter
+    const sentences = splitSentences(textOnly);
     if (!sentences || sentences.length <= 3) return match;
 
-    // Group into chunks of 3 sentences max
+    // For paragraphs with inline HTML (links, bold, etc.), use the original
+    // content and split on sentence boundaries within the HTML
+    const hasInlineHtml = /<[^/][^>]*>/.test(content);
+    if (hasInlineHtml) {
+      // Split the raw HTML content on sentence-ending punctuation followed by whitespace
+      // This preserves inline tags within each sentence
+      const htmlSentences = content.split(/(?<=[.!?])\s+(?=[A-Z<])/);
+      if (htmlSentences.length <= 3) return match;
+      const paragraphs = [];
+      for (let i = 0; i < htmlSentences.length; i += 3) {
+        const chunk = htmlSentences.slice(i, i + 3).join(' ').trim();
+        if (chunk) paragraphs.push(`<p>${chunk}</p>`);
+      }
+      return paragraphs.join('\n');
+    }
+
+    // Plain text paragraphs — simple split
     const paragraphs = [];
     for (let i = 0; i < sentences.length; i += 3) {
       const chunk = sentences.slice(i, i + 3).join('').trim();

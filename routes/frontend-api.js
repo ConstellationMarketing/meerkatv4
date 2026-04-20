@@ -508,44 +508,39 @@ router.get('/get-article', async (req, res) => {
   }
 });
 
-// ─── GET /get-article-revision — get a specific version's content ───────────
-router.get('/get-article-revision', async (req, res) => {
-  const { article_id, version } = req.query;
-  if (!article_id || version === undefined) {
-    return res.status(400).json({ error: 'article_id and version required' });
-  }
+// ─── GET /get-article-original — serves the initially generated content ─────
+// Uses "cleaned content" column which is written once by the pipeline and
+// never modified by editor saves.
+router.get('/get-article-original', async (req, res) => {
+  const { id } = req.query;
+  if (!id) return res.status(400).json({ error: 'Article ID required' });
 
   try {
     const { data, error } = await getSupabase()
-      .from('article_revisions')
-      .select('*')
-      .eq('article_id', article_id)
-      .eq('version_number', parseInt(version, 10))
-      .single();
-
-    if (error || !data) return res.status(404).json({ error: 'Revision not found' });
-
-    // Also get article metadata
-    const { data: article } = await getSupabase()
       .from('article_outlines')
-      .select('client_name, keyword, template, "word count", "flesch score", "Page URL", "URL Slug"')
-      .eq('article_id', article_id)
+      .select('article_id, client_name, keyword, template, "cleaned content", "word count", "flesch score", "Page URL", "URL Slug", created_at')
+      .eq('article_id', id)
       .maybeSingle();
+
+    if (error || !data) return res.status(404).json({ error: 'Article not found' });
+
+    const originalContent = data['cleaned content'];
+    if (!originalContent) return res.status(404).json({ error: 'Original content not available' });
 
     res.json({
       article: {
-        id: article_id,
-        articleId: article_id,
-        clientName: article?.client_name,
-        keyword: article?.keyword,
-        template: article?.template,
-        receivedArticle: { content: data.html_content, title: null, meta: null, receivedAt: data.created_at },
-        'word count': article?.['word count'],
-        'flesch score': article?.['flesch score'],
-        'Page URL': article?.['Page URL'],
-        'URL Slug': article?.['URL Slug'],
+        id: data.article_id,
+        articleId: data.article_id,
+        clientName: data.client_name,
+        keyword: data.keyword,
+        template: data.template,
+        receivedArticle: { content: originalContent, title: null, meta: null, receivedAt: data.created_at },
+        'word count': data['word count'],
+        'flesch score': data['flesch score'],
+        'Page URL': data['Page URL'],
+        'URL Slug': data['URL Slug'],
         createdAt: data.created_at,
-        versionNumber: data.version_number,
+        isOriginal: true,
       }
     });
   } catch (err) {

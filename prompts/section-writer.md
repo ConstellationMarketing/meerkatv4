@@ -237,4 +237,6 @@ sectionNumber: {{sectionNumber}}
 sectionName: {{sectionName}}
 Instructions: {{details}}
 
-IMPORTANT: If a sectionName is provided above, you MUST use it as the exact H2 heading for this section. Do not rename, rephrase, or "improve" the heading — use the section name verbatim. The only exception is sectionNumber 1 (Introduction), which uses H1 instead of H2.
+IMPORTANT: If a sectionName is provided above, you MUST use it as the exact H2 heading for this section. Do not rename, rephrase, or "improve" the heading — use the section name verbatim. Exceptions — do NOT generate an H2 for these sections:
+- sectionNumber 1 (H1 + Tagline) — uses H1 instead
+- Any section named "Introduction" or containing "Introduction" — this is intro body content that belongs under the H1, not a separate headed section. Write the content directly with no H2.

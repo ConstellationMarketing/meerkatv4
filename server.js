@@ -3,11 +3,13 @@
 require('dotenv').config();
 
 const express = require('express');
+const path = require('path');
 const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
 const { runPipeline } = require('./pipeline');
 const { runTranslation, getTranslationStatus } = require('./lib/translate');
 const { startBatch, cancelBatch, retryFailed, getBatchStatus } = require('./lib/batch');
+const frontendApi = require('./routes/frontend-api');
 
 const app = express();
 app.use(express.json({ limit: '10mb' }));
@@ -315,8 +317,31 @@ app.post('/batch/retry', async (req, res) => {
   }
 });
 
+// ─── Frontend API routes (ported from Netlify Functions) ──────────────────
+app.use('/api', frontendApi);
+
+// Also mount get-article and get-article-revisions at their legacy paths
+// so the frontend can call /.netlify/functions/get-article → /get-article
+app.use('/.netlify/functions', frontendApi);
+
+// ─── Serve frontend static files ──────────────────────────────────────────
+const publicDir = path.join(__dirname, 'public');
+app.use(express.static(publicDir));
+
+// SPA fallback — serve index.html for all non-API routes (client-side routing)
+app.get('*', (req, res) => {
+  // Don't serve index.html for API or health check routes
+  if (req.path.startsWith('/api/') || req.path.startsWith('/generate') ||
+      req.path.startsWith('/translate') || req.path.startsWith('/batch') ||
+      req.path.startsWith('/.netlify/')) {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  res.sendFile(path.join(publicDir, 'index.html'));
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Meerkat service running on port ${PORT}`);
   console.log(`Supabase table: ${process.env.SUPABASE_TABLE || 'article_outlines'}`);
+  console.log(`Static files: ${publicDir}`);
 });

@@ -959,6 +959,21 @@ async function runPipeline(payload) {
     try {
       await upsertArticle(articleRecord);
       console.log('[Pipeline] Supabase upsert success');
+
+      // Save initial generation as V0 revision for before/after comparison
+      try {
+        const { createClient } = require('@supabase/supabase-js');
+        const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+        await sb.from('article_revisions').insert([{
+          article_id: articleId,
+          html_content: cleanedContent,
+          version_number: 0,
+          created_at: new Date().toISOString(),
+        }]);
+        console.log('[Pipeline] V0 revision saved (initial generation)');
+      } catch (revErr) {
+        console.error('[Pipeline] V0 revision save failed:', revErr.message);
+      }
     } catch (err) {
       supabaseError = err.message;
       console.error('[Pipeline] Supabase upsert failed:', err.message);

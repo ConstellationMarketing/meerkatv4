@@ -14,13 +14,11 @@ const frontendApi = require('./routes/frontend-api');
 const app = express();
 app.use(express.json({ limit: '10mb' }));
 
-// CORS — allow requests from internal.goconstellation.com
-// Note: the VPS must be served over HTTPS for browser requests from an HTTPS page to work.
-// Set TRANSLATE_API_URL in .env once HTTPS is configured (e.g. Nginx + Let's Encrypt).
+// CORS — allow requests from os.goconstellation.com
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   const allowedOrigins = [
-    'https://internal.goconstellation.com',
+    'https://os.goconstellation.com',
     'https://meerkatv3.netlify.app'
   ];
   if (allowedOrigins.includes(origin)) {

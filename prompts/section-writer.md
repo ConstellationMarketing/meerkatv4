@@ -144,6 +144,9 @@ The "What to Expect" section must cover the legal process step by step. Include:
 - Never state case outcomes as guaranteed — legal results always depend on individual circumstances
 - Do not claim specialization — use "focuses on" never "specializes in"
 - Avoid outcome promises — use effort-based language: "we work toward the best possible outcome"
+- Do NOT use absolute language about legal processes or protections — avoid "ensures", "guarantees", "always", "never", "must", "will" when describing legal outcomes or protections. Use "may help", "is designed to", "can", "often", "typically" instead
+- Do NOT state that hiring an attorney "ensures" or "guarantees" any outcome — use "can help protect", "works to safeguard", "advocates for"
+- When citing statutes: ONLY cite statutes you are certain exist. Use the full official citation format (e.g., "O.C.G.A. § 40-6-391" not just "Georgia Code"). If you are not confident a statute number is correct, reference the legal concept without a specific citation (e.g., "Under Michigan employment law" instead of fabricating a statute number)
 
 ## Page-Type Section Rules
 - **Supporting/resource pages** must NOT include a "Why Choose Us" section. Supporting pages are educational and informational — firm promotion belongs only in the soft CTA. If you are writing a supporting page and the section instructions ask for "Why Choose Us," replace it with additional educational content relevant to the keyword (e.g., deeper legal analysis, additional scenarios, or a comparison of approaches).

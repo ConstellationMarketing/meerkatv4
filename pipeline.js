@@ -859,6 +859,42 @@ async function runPipeline(payload) {
     console.warn('[Pipeline] ⚠ No statute citation after repair attempt — editor must add manually');
   }
 
+  // ─── 6c. Statute verification — check citations are plausible ──────────────
+  if (hasStatutes) {
+    try {
+      const statuteCheckRaw = await callClaude(
+        'You are a legal citation verifier. Check every statute citation in this article (anything with § or "Section" followed by numbers, or state code references). For each citation, determine if it appears to be a real, correctly cited statute for the jurisdiction. Return ONLY a JSON array of objects with: {"citation": "the exact citation", "status": "valid" or "suspicious", "reason": "brief explanation"}. If all citations look valid, return an empty array []. No prose, no code fences.',
+        `Verify the statute citations in this article about "${keyword}":\n\n${cleanedContent}`,
+        'claude-sonnet-4-6'
+      );
+
+      try {
+        const statuteResults = parseJSON(statuteCheckRaw);
+        const suspicious = (Array.isArray(statuteResults) ? statuteResults : []).filter(s => s.status === 'suspicious');
+        if (suspicious.length > 0) {
+          console.warn(`[Pipeline] ⚠ ${suspicious.length} suspicious statute citation(s) found:`);
+          suspicious.forEach(s => {
+            console.warn(`  - "${s.citation}": ${s.reason}`);
+            // Remove the suspicious citation from the article — keep the legal concept, strip the number
+            const escaped = s.citation.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            cleanedContent = cleanedContent.replace(new RegExp(escaped, 'g'), (match) => {
+              // Replace specific citation with general reference
+              return match.replace(/§\s*[\d.-]+|Section\s+[\d.-]+/gi, '').replace(/\s{2,}/g, ' ').trim();
+            });
+          });
+          formatResult.warnings = formatResult.warnings || [];
+          formatResult.warnings.push(`Removed ${suspicious.length} suspicious statute citation(s) — editor should verify and add correct references`);
+        } else {
+          console.log('[Pipeline] Statute citations verified');
+        }
+      } catch (parseErr) {
+        console.warn('[Pipeline] Could not parse statute verification response — skipping');
+      }
+    } catch (err) {
+      console.warn('[Pipeline] Statute verification failed:', err.message);
+    }
+  }
+
   // ─── 7. Format check + auto-fix ──────────────────────────────────────────
   console.log('[Pipeline] Running format checker...');
   const formatResult = checkAndFixFormat(cleanedContent, { keyword, website, template, clientInfo });

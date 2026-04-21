@@ -46,6 +46,21 @@ PROHIBITED TERMS & GUIDELINES:
   Require that all claims be reality-based and verifiable, or removed.
   Ensure all content aligns with legal ethics standards and contains no unverified performance claims.
 
+- Absolute Language About Legal Processes (Compliance Requirement):
+  Flag language that makes absolute claims about legal protections, processes, or outcomes. Replace with qualified phrasing:
+  "ensures you protect your interests" → "can help protect your interests"
+  "legally binding contracts that often contain" → "contracts that may contain"
+  "ensures you don't accidentally forfeit rights" → "helps reduce the risk of forfeiting rights"
+  "having professional legal guidance ensures" → "professional legal guidance can help"
+  Any use of "ensures", "guarantees", "will protect", "will safeguard" in the context of legal services should be flagged and replaced with "may help", "can", "is designed to", "works to".
+
+- Statute Citation Verification (Compliance Requirement):
+  Check every statute citation in the article (anything with § or "Section" followed by numbers). Flag any citation that appears incorrect, fabricated, or misapplied. Common red flags:
+  - A statute number that doesn't match the described legal concept
+  - A state code citation used in the wrong jurisdiction context
+  - A statute cited for a legal concept it doesn't actually govern
+  If a citation looks suspicious, flag it with category "Statute Accuracy" and recommend either verifying or removing the specific number while keeping the legal concept reference.
+
 ADDITIONAL INSTRUCTIONS:
 - If no violations are found, return exactly: {"violations":[],"total":0,"categories":[]}
 - If violations are found, ensure JSON is valid and contains only the three top-level fields shown above.

@@ -240,6 +240,15 @@ sectionNumber: {{sectionNumber}}
 sectionName: {{sectionName}}
 Instructions: {{details}}
 
-IMPORTANT: If a sectionName is provided above, you MUST use it as the exact H2 heading for this section. Do not rename, rephrase, or "improve" the heading — use the section name verbatim. Exceptions — do NOT generate an H2 for these sections:
-- sectionNumber 1 (H1 + Tagline) — uses H1 instead
-- Any section named "Introduction" or containing "Introduction" — this is intro body content that belongs under the H1, not a separate headed section. Write the content directly with no H2.
+IMPORTANT: Treat the `sectionName` above as a **topic brief** — a short description of what this section must cover. Do NOT copy it into the H2 verbatim. Write a natural, reader-facing H2 that reflects the brief's topic as it applies to this specific keyword, jurisdiction, and client.
+
+### H2 Heading Rules
+- Write a contextual H2 that speaks to the reader, not a template label. Example: if the brief is "How We Can Help," a good H2 is "How We Help After a Slip-and-Fall in Atlanta" — not the literal phrase "How We Can Help."
+- Keep H2s under 14 words.
+- Do not restate the H1 primary keyword verbatim as the H2 (you may use related phrasing).
+- Never use slashes or meta-labels in headings. A heading like "CTA / Conclusion" is forbidden — write a real reader-facing heading instead (e.g., "Talk to a [practice area] Attorney in [city]").
+- If the brief names a well-known section concept (e.g., "Why Choose Us," "FAQ"), you may use that phrasing when it genuinely reads best — but the default is a more specific, contextual phrasing.
+
+### When to Omit the H2
+- **sectionNumber 1 (H1 + Tagline)** — this section emits ONLY the H1 and tagline. No H2. This is the only case where you skip the H2.
+- Every other section — including any "Introduction" section that is NOT sectionNumber 1 — MUST begin with an H2. Do not skip the H2 for introduction-type sections that come after the H1+Tagline section; editors rely on that heading being present.

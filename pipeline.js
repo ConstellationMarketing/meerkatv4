@@ -125,6 +125,34 @@ function stripPlaceholders(html, clientName) {
     .replace(/\[Contact\]/gi, '');
 }
 
+// Sanitize HTML returned by the article-review pass. The reviewer model has
+// been observed leaving its own reasoning artifacts inside `fixed_article`
+// (HTML comments, "Note:" / "Issue:" / "Fixed:" prefixes, or a preamble
+// before the first tag). Editors flagged these leaking into published copy.
+// Strip the known artifact patterns before applying the reviewed HTML.
+function sanitizeReviewedHTML(html) {
+  if (!html) return html;
+  let out = html;
+  // Drop HTML comments — review notes sometimes ship as <!-- Issue #5: ... -->
+  out = out.replace(/<!--[\s\S]*?-->/g, '');
+  // Drop any preamble before the first HTML tag (e.g., "Here's the corrected article:")
+  const firstTag = out.search(/<[a-zA-Z!]/);
+  if (firstTag > 0) out = out.slice(firstTag);
+  // Drop trailing prose after the last closing tag
+  const lastTagClose = out.lastIndexOf('>');
+  if (lastTagClose > -1 && lastTagClose < out.length - 1) {
+    out = out.slice(0, lastTagClose + 1);
+  }
+  // Drop standalone note-prefixed paragraphs the reviewer occasionally emits
+  // inside the article body. Conservative match: only strips a <p> whose entire
+  // content begins with a known reviewer-prefix label.
+  out = out.replace(
+    /<p>\s*(?:Note|Issue|Fixed|Internal note|TODO|Reviewer note)\s*[:\-—].*?<\/p>/gi,
+    ''
+  );
+  return out;
+}
+
 // Post-processing: remove links from inside heading tags
 function stripLinksFromHeadings(html) {
   return html.replace(/<(h[1-3])>([\s\S]*?)<\/\1>/gi, (match, tag, content) => {
@@ -503,7 +531,7 @@ const TEMPLATE_WORD_TARGETS = {
 };
 
 // Pre-upsert quality gate — returns { pass, issues[] }
-function qualityGate(content, sections, template, wordCount) {
+function qualityGate(content, sections, template, wordCount, formatWarnings = []) {
   const issues = [];
 
   // 1. Check for failed sections
@@ -535,6 +563,14 @@ function qualityGate(content, sections, template, wordCount) {
   if (!/<h1/i.test(content)) {
     issues.push('Missing H1 heading');
     return { pass: false, issues, reason: 'missing-h1' };
+  }
+
+  // 5. Hard-block scaffold/brief text leaks. Editors have flagged these as
+  // visibly templated copy multiple times; never publish them.
+  const scaffoldLeaks = (formatWarnings || []).filter(w => w.startsWith('SCAFFOLD:'));
+  if (scaffoldLeaks.length > 0) {
+    issues.push(...scaffoldLeaks);
+    return { pass: false, issues, reason: 'scaffold-text-leaked' };
   }
 
   return { pass: true, issues };
@@ -748,7 +784,7 @@ async function runPipeline(payload) {
         console.log(`  - [${issue.type}] ${issue.description}`);
       });
       if (reviewResult.fixed_article) {
-        fullContent = reviewResult.fixed_article;
+        fullContent = sanitizeReviewedHTML(reviewResult.fixed_article);
         // Re-run post-processing after review fixes (review may reintroduce issues)
         fullContent = enforceSingleH1(fullContent);
         fullContent = stripPlaceholders(fullContent, clientName);
@@ -976,7 +1012,7 @@ async function runPipeline(payload) {
   };
 
   // ─── 9a. Quality gate — block upsert if article is broken ─────────────────
-  const qc = qualityGate(cleanedContent, sections, template, scores.wordCount);
+  const qc = qualityGate(cleanedContent, sections, template, scores.wordCount, formatResult.warnings);
   if (!qc.pass) {
     console.error(`[Pipeline] ✗ QUALITY GATE FAILED for articleId=${articleId}:`);
     qc.issues.forEach(i => console.error(`  - ${i}`));

@@ -28,7 +28,20 @@ SYSTEM: You are a structural quality reviewer for law firm articles. Your ONLY j
 
 10. **Bold inconsistency**: If bold is applied to random phrases in some sections but not others, standardize it: bold should only mark key legal terms on first use and defined concepts. Remove random bold emphasis. Also check lists/series of terms — if some items in a comma-separated list are bolded but others are not (e.g., "**property division**, **spousal support**, or child custody"), make them consistent: either bold all items or none. Also check compound legal terms — if only part of a multi-word legal concept is bolded (e.g., "**maintenance** awards" instead of "**maintenance awards**"), extend the bold to cover the full phrase.
 
-11. **Repeated ideas across sections**: If two different sections make the same point (even with different wording), rewrite the later occurrence to introduce new, relevant information instead. Keep the same paragraph length and structure.
+11. **Repeated ideas across sections**: Sections must build on each other, not restate the same points. Run the section-pair checks below — for each match, rewrite the later occurrence to introduce new, relevant information while keeping the same paragraph length and structure.
+
+    **Common repetition pairs to detect and fix:**
+    - **Intro ↔ How We Can Help**: If the intro already framed the legal problem and the next section restates the problem framing before getting to the firm's solution, remove the problem-restatement from "How We Can Help" and lead with the solution. Each section explains a different angle: intro names the problem, "How We Can Help" describes the firm's response.
+    - **How We Can Help ↔ Why Choose Us**: If both sections list firm strengths or experience, keep the firm strengths in "Why Choose Us" only. "How We Can Help" should describe the firm's *approach to the legal issue*, not its credentials.
+    - **What to Expect ↔ Intro/How We Can Help**: If the intro or "How We Can Help" already previewed process steps (consultation, filing, negotiation, etc.), strip the preview from the earlier section. "What to Expect" is the only section that walks through process steps.
+    - **What to Expect ↔ FAQ**: If FAQ answers restate process steps already covered in "What to Expect," reframe FAQ answers around different sub-questions (e.g., timing edge cases, cost questions, what-if scenarios) instead of re-summarizing the process.
+    - **Intro ↔ Why Choose Us**: If the intro already named credentials, years of experience, or service area, remove those from the intro (intro is for the legal problem and the reader's situation). Differentiators belong in "Why Choose Us" only.
+    - **Key Information ↔ Additional Context** (supporting pages): These two sections must cover distinct angles. If "Additional Context" restates the core answer from "Key Information," rewrite it to cover edge cases, jurisdictional nuances, or related-but-distinct considerations. See the tightened section briefs in the supporting-page template — "Additional Context" is for depth beyond the core answer, not a restatement.
+
+    **What counts as "the same point":** A repeated idea, claim, or fact restated with different wording still counts as repetition. Examples that must be deduplicated:
+    - "We help families through divorce" / "Our team guides clients through the divorce process" — same point, different words.
+    - "Filing requires a petition" appearing in both "What to Expect" and FAQ — duplicate process step.
+    - Listing the same service area (e.g., "St. Louis County, Jefferson County, St. Charles County") in both intro and "Why Choose Us" — pick one location for the geographic scope.
 
 12. **Duplicate or stuttered phrases**: If the same word or phrase appears twice in a row within a sentence (e.g., "clear guidance, clear guidance" or "we help help you"), fix it by removing the duplicate. This is a typo-level structural error — always fix it.
 

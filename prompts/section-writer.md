@@ -76,10 +76,21 @@ Never omit any of these sections regardless of keyword or article type.
 ### Why Choose Us — Personalization Requirement
 This section MUST be grounded in specific details from the CLIENT DETAILS above. Do not write generic trust language.
 - Reference the lead attorney BY NAME if provided in client details
-- Include at least 3 specific, verifiable differentiators from the client's selling points (e.g., years of experience, case focus areas, prior roles, awards, geographic coverage)
-- If the client details mention a specific credential or background (e.g., "former public defender," "10+ years focused on X"), that MUST appear in this section
-- Do NOT use generic phrases like "experienced team," "dedicated to your case," "proven track record," or "compassionate representation" unless backed by a specific detail in the same sentence
-- Each subsection or paragraph must tie back to a concrete client attribute — no filler paragraphs allowed
+- Include **3–5 distinct H3 sub-headings**, each anchored to a concrete differentiator extracted from CLIENT DETAILS. Each H3 introduces one differentiator; do NOT bury multiple differentiators in a single H3.
+- The H3 heading itself should name the differentiator concretely (e.g., "30+ Years in Central Mississippi Courts", "Focused Family Law Practice", "Strong Local Ties in Cobb County"). Do NOT use vague H3 labels like "Experience" or "Communication" — pull the specific from CLIENT DETAILS into the heading.
+- Aim for **200+ words total** in this section across the H3 sub-points.
+- Differentiator categories to draw from (use what's in CLIENT DETAILS, do NOT fabricate):
+  - Years of practice / experience volume
+  - Practice focus areas (especially niche or specialized ones)
+  - Attorney credentials, prior roles, awards, recognitions
+  - Geographic coverage / specific courts or counties served
+  - Approach or methodology specifics
+  - Notable case results or outcomes (only if explicitly in CLIENT DETAILS)
+- If the client details mention a specific credential or background (e.g., "former public defender," "10+ years focused on X"), that MUST appear in this section as one of the H3s.
+- Do NOT use generic phrases like "experienced team," "dedicated to your case," "proven track record," or "compassionate representation" unless backed by a specific detail in the same sentence.
+- Each subsection or paragraph must tie back to a concrete client attribute — no filler paragraphs allowed.
+
+**If CLIENT DETAILS is sparse:** do NOT pad with generic trust language to hit the H3 count. Write fewer H3s grounded in real detail rather than more H3s of boilerplate. The format checker will surface a sparse-section warning so editors know to expand it manually.
 
 ### What to Expect — Jurisdiction-Specific Requirement
 This section MUST be tailored to the specific state and legal process implied by the keyword.
@@ -106,6 +117,18 @@ The "What to Expect" section must cover the legal process step by step. Include:
 - Varied phrasing of the same idea still counts as repetition and must be avoided
 - **Introduction**: Write exactly ONE intro paragraph block. Do not repeat or restate the opening paragraph. Never write the intro twice with different wording.
 - Do NOT repeat the same verb+pronoun pattern (e.g., "We fight," "We work," "We handle") more than twice in any section. Vary sentence openings — use the client's name, "Our team," "Your case," or lead with the action instead of "We."
+
+### Section-Boundary Rules — Each Section Has Its Own Job
+Sections must build on each other. The boundaries below tell you what each section is for and what it must NOT do — write only the slice this section owns.
+
+- **Introduction (section 1)**: Frames the *legal problem* and the reader's situation. May name the firm and service area as factual identification. Must NOT preview specific process steps (those belong in "What to Expect"), must NOT list firm credentials or differentiators (those belong in "Why Choose Us"), must NOT restate service-area details that will appear in later sections.
+- **How We Can Help**: Describes the firm's *approach to the legal issue* — what the firm does, how it analyzes the situation, what kinds of solutions it pursues. Must NOT re-frame the problem (intro did that), must NOT list firm credentials (those are in "Why Choose Us"), must NOT walk through the procedural process (that's "What to Expect").
+- **Why Choose Us** (practice pages only): The firm's *credentials and differentiators* — years of practice, attorneys' backgrounds, results, recognitions, geographic reach. Must NOT explain the legal issue, must NOT describe the legal process, must NOT repeat service-area details that already appeared in the intro.
+- **What to Expect**: The *legal process and client experience* — sequential steps, timelines, what the client does at each stage, what the firm does at each stage. This is the ONLY section that walks through process steps. Must NOT pitch the firm or list credentials.
+- **CTA**: A direct call to act, with a contact link. Must NOT re-explain the legal issue, must NOT preview the process, must NOT restate firm credentials at length.
+- **FAQ**: Each question must cover a *distinct* sub-topic that wasn't already fully answered in the body. If a body section already explained the answer, rewrite the FAQ question to cover a different angle (timing edge cases, cost, what-if scenarios) — do NOT just compress and restate body content.
+
+If your assigned section's brief overlaps with another section's brief (e.g., both touch on "process"), differentiate by *angle*: one section covers the firm's response, the other covers the client experience and timeline.
 
 ## Introduction — Prohibited Filler
 - Do NOT end the introduction with meta-commentary about the article itself. The following patterns are banned:

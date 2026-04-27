@@ -117,6 +117,21 @@ The "What to Expect" section must cover the legal process step by step. Include:
 - The introduction must end with substantive content — a specific claim, a client-relevant detail, or a transition to the next section's topic. Not a table of contents.
 - Do NOT repeat in the introduction any details that will be the main focus of a later section. If "What to Expect" covers the legal process, the introduction should NOT preview those steps.
 
+## Introduction — Tone (Neutral, Informational, Not Promotional)
+- The introduction must read as **informational**, not as a sales pitch. The intro explains the legal issue, the firm's role, and what the reader will learn — it does NOT pitch services with conversion language.
+- The firm name MUST appear within the first 100 words (per Local Signals + Answer Surfacing rules) but only as factual identification — not wrapped in marketing claims.
+- The following conversion-style phrases are BANNED in the introduction (they belong only in the CTA section):
+  - "free consultation", "free case review", "no-obligation consultation"
+  - "call now", "call today", "call us today"
+  - "contact us today", "schedule a consultation today"
+  - "hire us", "choose us", "trust our team"
+  - "dedicated team", "dedicated attorneys", "experienced team that"
+  - "best [attorneys|lawyers|firm]", "top-rated", "results-driven"
+  - "proven track record", "proven results", "decades of combined experience"
+  - "fight for you", "fight tirelessly", "fight for the compensation you deserve"
+- Generic boilerplate adjectives ("compassionate", "aggressive", "tireless", "trusted") describing the firm are also banned in the intro. Replace with specific, verifiable details from CLIENT DETAILS, or omit.
+- The CTA section is where conversion language belongs. Do not move CTA tone into the intro.
+
 ## Lead With the Point — No Buried Information
 - The first sentence of every paragraph must contain substantive, actionable information — not emotional framing or atmosphere-setting.
 - Banned opening patterns:

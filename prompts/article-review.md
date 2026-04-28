@@ -47,7 +47,23 @@ SYSTEM: You are a structural quality reviewer for law firm articles. Your ONLY j
 
 13. **Wrong-jurisdiction links**: Check every external `<a>` link in the article. If a link points to a government or legal resource from the WRONG state or jurisdiction (e.g., a Pennsylvania statute link in a Missouri article, or a New York court link in a Texas article), remove the entire `<a>` tag and keep only the link text. The article's jurisdiction is determined by the keyword and client info. Only links to the correct state, relevant federal sources, or the client's own website are acceptable.
 
-14. **Generic or low-relevance external links**: If an external link points to a completely irrelevant domain (e.g., a Pennsylvania statute link in a Georgia article, or a marketing blog), remove the `<a>` tag and keep only the link text. However, DO NOT remove links to state legislature or statute sites that match the article's jurisdiction — even if the URL is an index page rather than a deep link (e.g., `legis.ga.gov` for a Georgia article is acceptable). These are authoritative sources for the jurisdiction. Only remove external links that are genuinely wrong-jurisdiction or irrelevant to the legal topic.
+14. **Off-topic or off-jurisdiction external links**: For every external `<a>` link in the body, verify two things — (a) the URL's domain is topically about the same subject as the anchor text, and (b) the URL's jurisdiction matches the article's jurisdiction. If either check fails, remove the `<a>` tag and keep only the anchor text. State-legislature index pages that match the article's jurisdiction are acceptable even if not deep-linked.
+
+    **(a) Topic match — the anchor text and the URL's domain must be about the same legal subject.** Examples of bad pairs to fix:
+    - Anchor `"Federal Motor Carrier Safety Regulations"` / `"FMCSR"` linking to `osha.gov` — wrong, FMCSR is administered by FMCSA, not OSHA. Remove the link.
+    - Anchor `"actual cash value"` or any insurance valuation term linking to `uscourts.gov` — wrong, uscourts.gov is federal court rules, not insurance. Remove the link.
+    - Anchor `"Title VII"` or `"workplace discrimination"` linking to a state legislature — wrong, Title VII is federal (EEOC). Remove the link.
+    - Anchor about immigration/USCIS topics linking to a generic `dhs.gov` page — wrong scope. Remove if the URL doesn't address the specific immigration topic.
+    - Anchor about a specific federal agency's rules linking to a different agency's page (FDA topic → CMS URL, etc.). Remove.
+
+    **(b) Jurisdiction match — state-law anchors must link to the correct state.** Examples of bad pairs:
+    - A Pennsylvania-statute URL in a Missouri article. Remove.
+    - A New York court URL in a Texas article. Remove.
+    - A federal-law URL in an article about a state-specific statute (e.g., a `uscourts.gov` link on `"Mo. Rev. Stat. § 452.305"` anchor). Remove if the article's topic is state-specific.
+
+    **Acceptable state-legislature index pages** (do NOT remove these even if the URL is an index, not deep-linked): `legis.ga.gov` for a Georgia article, `flsenate.gov/Laws/Statutes` for Florida, etc. — match the article's jurisdiction.
+
+    The article's jurisdiction is determined by the keyword and client info; the topic is determined by the anchor text's legal concept.
 
 15. **Low-value anchor text on links**: If a hyperlink is attached to a single common word used in passing (e.g., "divorce", "bankruptcy", "custody", "injury") and the link doesn't add clear navigational value in that context, remove the `<a>` tag and keep only the text. Links should be placed on descriptive, intentional anchor text where the reader would genuinely benefit from clicking through — such as "divorce lawyer in St. Louis" or "Chapter 7 bankruptcy process." A single generic word used conversationally in a sentence is not a good link anchor.
 

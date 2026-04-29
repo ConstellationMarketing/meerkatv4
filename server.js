@@ -8,7 +8,7 @@ const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
 const { runPipeline } = require('./pipeline');
 const { runTranslation, getTranslationStatus } = require('./lib/translate');
-const { startBatch, cancelBatch, retryFailed, getBatchStatus } = require('./lib/batch');
+const { startBatch, cancelBatch, retryFailed, getBatchStatus, getActiveBatch, markOrphanedBatches } = require('./lib/batch');
 const frontendApi = require('./routes/frontend-api');
 
 const app = express();
@@ -133,6 +133,19 @@ app.post('/batch/start', async (req, res) => {
   console.log(`\n[Server] POST /batch/start | batchId=${batchId} | articles=${articles.length}`);
 
   try {
+    // Active-batch lock: refuse to start a new batch while another is running.
+    // The batch loop is sequential and runs in this same VPS process; a second
+    // concurrent batch would share Anthropic rate limits, race on status
+    // updates, and confuse the UI. User must cancel the existing batch first.
+    const active = await getActiveBatch();
+    if (active) {
+      return res.status(409).json({
+        error: 'Another batch is already running. Cancel it before starting a new one.',
+        activeBatchId: active.batch_id,
+        progress: `${active.completed_count || 0}/${active.total_articles || 0}`,
+      });
+    }
+
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
     // Resolve clientInfo, website, clientId from client_folders for each unique client
@@ -162,13 +175,34 @@ app.post('/batch/start', async (req, res) => {
 
     // Resolve template sections
     const templateIds = [...new Set(articles.map(a => a.template || 'practice-page'))];
-    const { data: templates } = await supabase
+    const { data: templates, error: templateError } = await supabase
       .from('templates')
       .select('id, sections')
       .in('id', templateIds);
 
+    if (templateError) {
+      return res.status(500).json({ error: `Failed to lookup templates: ${templateError.message}` });
+    }
+
     const templateMap = {};
     (templates || []).forEach(t => { templateMap[t.id] = t.sections; });
+
+    // Fail-loud: every CSV-supplied template ID must resolve to a Supabase row
+    // with a non-empty sections array. Previously this fell back to an empty
+    // sections array and the article would generate as garbage with no error
+    // logged. With the templates table having been wiped once already, we
+    // need to surface unresolved IDs immediately rather than silently ship
+    // bad articles.
+    const unresolvedTemplates = templateIds.filter(
+      id => !templateMap[id] || !Array.isArray(templateMap[id]) || templateMap[id].length === 0
+    );
+    if (unresolvedTemplates.length > 0) {
+      return res.status(400).json({
+        error: `${unresolvedTemplates.length} template ID(s) not found or empty in Supabase templates table`,
+        unresolvedTemplates,
+        hint: 'Add the missing template(s) via Settings → Templates, or fix the template column in your CSV.',
+      });
+    }
 
     // Enrich each article
     const enrichedArticles = articles.map(a => {
@@ -342,4 +376,10 @@ app.listen(PORT, () => {
   console.log(`Meerkat service running on port ${PORT}`);
   console.log(`Supabase table: ${process.env.SUPABASE_TABLE || 'article_outlines'}`);
   console.log(`Static files: ${publicDir}`);
+  // Sweep any orphaned batches left behind by a previous process. The batch
+  // loop runs as a background promise inside this process, so any restart
+  // (deploy, crash, OOM) abandons in-flight batches in 'processing' status.
+  // Mark them as 'orphaned' so the active-batch lock below can let new
+  // batches proceed.
+  markOrphanedBatches().catch(err => console.error('[Batch] Orphan sweep error:', err));
 });

@@ -415,8 +415,12 @@ router.delete('/delete-user-cascade', async (req, res) => {
     }
 
     const uid = userToDelete.id;
+    // `templates` intentionally omitted from this cascade — see the matching
+    // change in meerkatv3 netlify/functions/delete-user-cascade.ts. Templates
+    // are shared team resources, not user-owned data; deleting them with the
+    // user causes silent data loss for everyone else.
     const tables = ['team_members', 'article_outlines', 'article_comments', 'article_revisions',
-                     'article_access', 'public_shares', 'client_folders', 'templates', 'webhook_logs'];
+                     'article_access', 'public_shares', 'client_folders', 'webhook_logs'];
 
     for (const table of tables) {
       try {

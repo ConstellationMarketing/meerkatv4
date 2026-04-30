@@ -64,7 +64,13 @@ async function callClaude(systemPrompt, userPrompt, model = 'claude-haiku-4-5-20
   }
 }
 
-// Parse JSON from Claude output (strips code fences and leading prose if present)
+// Parse JSON from Claude output. Handles three observed failure modes:
+//   1. Code-fence wrappers (```json ... ```)
+//   2. Leading prose ("Here are the links: [...]")
+//   3. Trailing prose ("[...] I hope this helps.") — observed in batch
+//      smoke test logs as "Unexpected non-whitespace character after JSON
+//      at position N" failures, which were silently dropping every external
+//      link the model generated.
 function parseJSON(raw) {
   let cleaned = raw
     .replace(/^```json\s*/i, '')
@@ -72,15 +78,48 @@ function parseJSON(raw) {
     .replace(/```$/i, '')
     .trim();
 
-  // If response starts with prose instead of JSON, try to extract JSON
+  // Strip leading prose
   if (!cleaned.startsWith('{') && !cleaned.startsWith('[')) {
     const jsonStart = cleaned.search(/[\[{]/);
-    if (jsonStart !== -1) {
-      cleaned = cleaned.slice(jsonStart);
+    if (jsonStart !== -1) cleaned = cleaned.slice(jsonStart);
+  }
+
+  // Direct parse first — when the model returns clean JSON, this is fastest
+  try {
+    return JSON.parse(cleaned);
+  } catch {
+    // Fall through to bracket-balance extraction below
+  }
+
+  // Walk forward tracking nesting depth and string state. Slice at the
+  // matched closing bracket/brace. Strips any trailing prose the model
+  // added after a valid JSON value.
+  const opener = cleaned[0];
+  if (opener !== '[' && opener !== '{') throw new Error('parseJSON: no opening bracket/brace found');
+  const closer = opener === '[' ? ']' : '}';
+
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  let endIdx = -1;
+  for (let i = 0; i < cleaned.length; i++) {
+    const ch = cleaned[i];
+    if (inString) {
+      if (escaped) { escaped = false; continue; }
+      if (ch === '\\') { escaped = true; continue; }
+      if (ch === '"') { inString = false; }
+      continue;
+    }
+    if (ch === '"') { inString = true; continue; }
+    if (ch === opener) depth++;
+    else if (ch === closer) {
+      depth--;
+      if (depth === 0) { endIdx = i; break; }
     }
   }
 
-  return JSON.parse(cleaned);
+  if (endIdx === -1) throw new Error('parseJSON: unbalanced brackets/braces');
+  return JSON.parse(cleaned.slice(0, endIdx + 1));
 }
 
 // Post-processing: enforce single H1 — strip all but the first, or promote first H2
@@ -498,7 +537,11 @@ function hasStatuteCitation(html) {
   return statutePatterns.some(p => p.test(textOnly));
 }
 
-// Post-processing: cap H3s at 2 per section — convert excess to bold paragraph labels
+// Post-processing: cap H3s at 5 per section — convert excess to bold paragraph
+// labels. Cap raised from 2 → 5 to match the new richer Why Choose Us /
+// What to Expect briefs (which call for 3–5 H3 sub-headings). Previously,
+// capH3Density was the silent reason articles shipped with only 2 H3s
+// regardless of what the model produced or what the brief requested.
 function capH3Density(html) {
   const parts = html.split(/(<h2>)/i);
   let result = parts[0];
@@ -510,8 +553,8 @@ function capH3Density(html) {
 
     const fixed = sectionContent.replace(/<h3>([\s\S]*?)<\/h3>/gi, (match, heading) => {
       h3Count++;
-      if (h3Count > 2) {
-        // Convert to bold paragraph label instead of H3
+      if (h3Count > 5) {
+        // Beyond 5 — convert to bold paragraph label instead of H3
         return `<p><strong>${heading.trim()}</strong></p>`;
       }
       return match;

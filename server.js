@@ -284,10 +284,18 @@ app.post('/batch/cancel', async (req, res) => {
   }
 });
 
-// Retry failed articles from a batch
+// Retry failed articles from a batch.
+//   body.batchId           — required
+//   body.articleKeywords   — optional array of keywords to retry. If present,
+//                            only those (intersected with the batch's failed
+//                            set) are re-run. If absent, every failed article
+//                            in the batch is retried (existing behavior).
 app.post('/batch/retry', async (req, res) => {
-  const { batchId } = req.body;
+  const { batchId, articleKeywords } = req.body;
   if (!batchId) return res.status(400).json({ error: 'Missing field: batchId' });
+  if (articleKeywords !== undefined && !Array.isArray(articleKeywords)) {
+    return res.status(400).json({ error: 'articleKeywords must be an array if provided' });
+  }
 
   try {
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
@@ -297,9 +305,27 @@ app.post('/batch/retry', async (req, res) => {
       return res.status(400).json({ error: 'No failed articles to retry' });
     }
 
-    // Re-resolve client data for failed articles
+    // Determine which failed articles to retry. Default = all failed in this
+    // batch. If articleKeywords supplied, intersect with the failed set so
+    // callers cannot retry a keyword that didn't fail (or doesn't exist).
     const failedKeywords = new Set(job.errors.map(e => e.keyword));
-    const failedArticles = (job.csv_data || []).filter(a => failedKeywords.has(a.keyword));
+    const requestedKeywords = Array.isArray(articleKeywords) && articleKeywords.length > 0
+      ? new Set(articleKeywords)
+      : null;
+    const targetKeywords = requestedKeywords
+      ? new Set([...failedKeywords].filter(k => requestedKeywords.has(k)))
+      : failedKeywords;
+
+    if (targetKeywords.size === 0) {
+      return res.status(400).json({
+        error: 'No matching failed articles for retry',
+        hint: requestedKeywords
+          ? 'None of the supplied articleKeywords appear in the batch failure set.'
+          : 'Batch has no failed articles.',
+      });
+    }
+
+    const failedArticles = (job.csv_data || []).filter(a => targetKeywords.has(a.keyword));
 
     const uniqueClients = [...new Set(failedArticles.map(a => a.clientName))];
     const { data: folders } = await supabase.from('client_folders').select('name, id, website, client_info').in('name', uniqueClients);
@@ -337,10 +363,11 @@ app.post('/batch/retry', async (req, res) => {
       status: 'retrying',
       batchId,
       retryCount: enrichedArticles.length,
+      scope: requestedKeywords ? 'selected' : 'all',
       message: 'Retry started. Poll /batch/status for progress.'
     });
 
-    retryFailed(batchId, enrichedArticles)
+    retryFailed(batchId, enrichedArticles, requestedKeywords ? [...requestedKeywords] : null)
       .then(() => console.log(`[Server] Batch "${batchId}" retry complete`))
       .catch(err => console.error(`[Server] Batch "${batchId}" retry failed:`, err));
 

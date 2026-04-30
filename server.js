@@ -173,41 +173,81 @@ app.post('/batch/start', async (req, res) => {
       });
     }
 
-    // Resolve template sections
-    const templateIds = [...new Set(articles.map(a => a.template || 'practice-page'))];
+    // Resolve template sections. Fetch ALL templates so we can fuzzy-match
+    // user-supplied values against both `id` and `name` (e.g., spreadsheet
+    // entries like "Practice Page" or "Supporting Page" should resolve to
+    // their canonical IDs without forcing editors to remember the slug
+    // format).
     const { data: templates, error: templateError } = await supabase
       .from('templates')
-      .select('id, sections')
-      .in('id', templateIds);
+      .select('id, name, sections');
 
     if (templateError) {
       return res.status(500).json({ error: `Failed to lookup templates: ${templateError.message}` });
     }
 
+    // Build an alias → canonical-id map. Each template contributes its id and
+    // its name (and several normalized variants) so common CSV inputs
+    // resolve. Normalization: lowercase, hyphens/underscores → spaces, then
+    // collapse whitespace.
+    const normalize = (s) => (s || '')
+      .toString()
+      .toLowerCase()
+      .replace(/[-_]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const aliasToId = {};
+    (templates || []).forEach(t => {
+      if (!t.id) return;
+      [t.id, t.name].forEach(alias => {
+        const key = normalize(alias);
+        if (key) aliasToId[key] = t.id;
+      });
+    });
+
     const templateMap = {};
     (templates || []).forEach(t => { templateMap[t.id] = t.sections; });
 
-    // Fail-loud: every CSV-supplied template ID must resolve to a Supabase row
-    // with a non-empty sections array. Previously this fell back to an empty
-    // sections array and the article would generate as garbage with no error
-    // logged. With the templates table having been wiped once already, we
-    // need to surface unresolved IDs immediately rather than silently ship
-    // bad articles.
-    const unresolvedTemplates = templateIds.filter(
+    // Resolve each article's user-supplied template value to its canonical id.
+    // Default to practice-page when blank.
+    const resolveTemplate = (raw) => {
+      const candidate = (raw && raw.trim()) ? raw : 'practice-page';
+      return aliasToId[normalize(candidate)] || null;
+    };
+
+    // Build the set of unique resolved IDs (or null for unresolved) to surface
+    // unresolved values back to the caller before kicking off generation.
+    const unresolvedRawValues = [...new Set(
+      articles
+        .filter(a => resolveTemplate(a.template) === null)
+        .map(a => a.template || '(blank)')
+    )];
+    if (unresolvedRawValues.length > 0) {
+      return res.status(400).json({
+        error: `${unresolvedRawValues.length} template value(s) not found in Supabase templates table`,
+        unresolvedTemplates: unresolvedRawValues,
+        hint: 'Use one of the template names or IDs from Settings → Templates. "Practice Page" / "Supporting Page" / "practice-page" / "supporting-page" all resolve.',
+      });
+    }
+
+    // All resolved — also fail-loud if a resolved id maps to empty sections.
+    const resolvedIds = [...new Set(articles.map(a => resolveTemplate(a.template)))];
+    const emptySectionIds = resolvedIds.filter(
       id => !templateMap[id] || !Array.isArray(templateMap[id]) || templateMap[id].length === 0
     );
-    if (unresolvedTemplates.length > 0) {
+    if (emptySectionIds.length > 0) {
       return res.status(400).json({
-        error: `${unresolvedTemplates.length} template ID(s) not found or empty in Supabase templates table`,
-        unresolvedTemplates,
-        hint: 'Add the missing template(s) via Settings → Templates, or fix the template column in your CSV.',
+        error: `${emptySectionIds.length} template(s) resolved but have no sections`,
+        unresolvedTemplates: emptySectionIds,
+        hint: 'Edit the template via Settings → Templates and add at least one section.',
       });
     }
 
     // Enrich each article
     const enrichedArticles = articles.map(a => {
       const client = clientMap[a.clientName];
-      const templateId = a.template || 'practice-page';
+      const templateId = resolveTemplate(a.template);
       const sections = templateMap[templateId] || [];
 
       return {
@@ -333,14 +373,28 @@ app.post('/batch/retry', async (req, res) => {
     const clientMap = {};
     (folders || []).forEach(f => { clientMap[f.name] = { clientId: f.id, website: f.website, clientInfo: f.client_info }; });
 
-    const templateIds = [...new Set(failedArticles.map(a => a.template || 'practice-page'))];
-    const { data: templates } = await supabase.from('templates').select('id, sections').in('id', templateIds);
+    // Same fuzzy template resolution as /batch/start — handles "Practice Page"
+    // / "supporting-page" / etc. by alias.
+    const { data: templates } = await supabase.from('templates').select('id, name, sections');
+    const normalize = (s) => (s || '').toString().toLowerCase().replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim();
+    const aliasToId = {};
+    (templates || []).forEach(t => {
+      if (!t.id) return;
+      [t.id, t.name].forEach(alias => {
+        const key = normalize(alias);
+        if (key) aliasToId[key] = t.id;
+      });
+    });
     const templateMap = {};
     (templates || []).forEach(t => { templateMap[t.id] = t.sections; });
+    const resolveTemplate = (raw) => {
+      const candidate = (raw && raw.trim()) ? raw : 'practice-page';
+      return aliasToId[normalize(candidate)] || null;
+    };
 
     const enrichedArticles = failedArticles.map(a => {
       const client = clientMap[a.clientName] || {};
-      const templateId = a.template || 'practice-page';
+      const templateId = resolveTemplate(a.template) || 'practice-page';
       const sections = templateMap[templateId] || [];
       return {
         keyword: a.keyword,

@@ -148,24 +148,39 @@ app.post('/batch/start', async (req, res) => {
 
     const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-    // Resolve clientInfo, website, clientId from client_folders for each unique client
+    // Resolve clientInfo, website, clientId from client_folders. Fetch ALL
+    // folders so we can fuzzy-match user-supplied names against the canonical
+    // values — punctuation differences ("Robert R Hopkins" vs "Robert R.
+    // Hopkins", "Chip Herrington Attorney" vs "Chip Herrington, Attorney")
+    // shouldn't block validation. Mirrors the template-alias treatment.
     const uniqueClients = [...new Set(articles.map(a => a.clientName))];
     const { data: folders, error: folderError } = await supabase
       .from('client_folders')
-      .select('name, id, website, client_info')
-      .in('name', uniqueClients);
+      .select('name, id, website, client_info');
 
     if (folderError) {
       return res.status(500).json({ error: `Failed to lookup clients: ${folderError.message}` });
     }
 
-    const clientMap = {};
+    const normalizeClient = (s) => (s || '')
+      .toString()
+      .toLowerCase()
+      .replace(/[.,]/g, '')
+      .replace(/[-_]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    const clientAliasToCanonical = {};
+    const clientByCanonical = {};
     (folders || []).forEach(f => {
-      clientMap[f.name] = { clientId: f.id, website: f.website, clientInfo: f.client_info };
+      const key = normalizeClient(f.name);
+      if (key) clientAliasToCanonical[key] = f.name;
+      clientByCanonical[f.name] = { clientId: f.id, website: f.website, clientInfo: f.client_info };
     });
 
-    // Check for unresolved clients
-    const unresolved = uniqueClients.filter(c => !clientMap[c]);
+    const resolveClient = (raw) => clientAliasToCanonical[normalizeClient(raw)] || null;
+
+    const unresolved = uniqueClients.filter(c => resolveClient(c) === null);
     if (unresolved.length > 0) {
       return res.status(400).json({
         error: `${unresolved.length} client(s) not found in client_folders`,
@@ -244,15 +259,18 @@ app.post('/batch/start', async (req, res) => {
       });
     }
 
-    // Enrich each article
+    // Enrich each article. Use the canonical client name so downstream
+    // storage (article_outlines.client_name, batch_jobs metadata) is
+    // consistent regardless of how the user typed it in the CSV.
     const enrichedArticles = articles.map(a => {
-      const client = clientMap[a.clientName];
+      const canonicalName = resolveClient(a.clientName);
+      const client = clientByCanonical[canonicalName];
       const templateId = resolveTemplate(a.template);
       const sections = templateMap[templateId] || [];
 
       return {
         keyword: a.keyword,
-        clientName: a.clientName,
+        clientName: canonicalName,
         clientId: client.clientId,
         clientInfo: client.clientInfo || '',
         website: client.website || '',
@@ -367,14 +385,18 @@ app.post('/batch/retry', async (req, res) => {
 
     const failedArticles = (job.csv_data || []).filter(a => targetKeywords.has(a.keyword));
 
-    const uniqueClients = [...new Set(failedArticles.map(a => a.clientName))];
-    const { data: folders } = await supabase.from('client_folders').select('name, id, website, client_info').in('name', uniqueClients);
+    // Same fuzzy client + template resolution as /batch/start.
+    const { data: folders } = await supabase.from('client_folders').select('name, id, website, client_info');
+    const normalizeClient = (s) => (s || '').toString().toLowerCase().replace(/[.,]/g, '').replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim();
+    const clientAliasToCanonical = {};
+    const clientByCanonical = {};
+    (folders || []).forEach(f => {
+      const key = normalizeClient(f.name);
+      if (key) clientAliasToCanonical[key] = f.name;
+      clientByCanonical[f.name] = { clientId: f.id, website: f.website, clientInfo: f.client_info };
+    });
+    const resolveClient = (raw) => clientAliasToCanonical[normalizeClient(raw)] || null;
 
-    const clientMap = {};
-    (folders || []).forEach(f => { clientMap[f.name] = { clientId: f.id, website: f.website, clientInfo: f.client_info }; });
-
-    // Same fuzzy template resolution as /batch/start — handles "Practice Page"
-    // / "supporting-page" / etc. by alias.
     const { data: templates } = await supabase.from('templates').select('id, name, sections');
     const normalize = (s) => (s || '').toString().toLowerCase().replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim();
     const aliasToId = {};
@@ -393,12 +415,13 @@ app.post('/batch/retry', async (req, res) => {
     };
 
     const enrichedArticles = failedArticles.map(a => {
-      const client = clientMap[a.clientName] || {};
+      const canonicalName = resolveClient(a.clientName);
+      const client = canonicalName ? clientByCanonical[canonicalName] : {};
       const templateId = resolveTemplate(a.template) || 'practice-page';
       const sections = templateMap[templateId] || [];
       return {
         keyword: a.keyword,
-        clientName: a.clientName,
+        clientName: canonicalName || a.clientName,
         clientId: client.clientId || null,
         clientInfo: client.clientInfo || '',
         website: client.website || '',

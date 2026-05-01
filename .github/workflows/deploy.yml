@@ -16,9 +16,11 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           envs: GH_TOKEN
           script: |
+            set -euo pipefail
             cd /root/meerkat-service
             git remote set-url origin https://x-access-token:$GH_TOKEN@github.com/ConstellationMarketing/meerkatv4.git
-            git pull origin main
+            git fetch origin main
+            git reset --hard origin/main
             npm install --omit=dev
             pm2 restart meerkat --update-env
         env:

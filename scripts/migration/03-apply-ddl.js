@@ -67,6 +67,27 @@ if (apply.status !== 0) {
 
 console.log('[03] DDL applied successfully');
 
+// Grant API role privileges on the new schemas. pg_dump output doesn't include
+// these because Supabase normally adds them via dashboard tooling when a table
+// is created. Without these grants, REST API queries against the schemas return
+// 403 "permission denied for schema <name>".
+console.log('[03] Granting API role privileges on new schemas');
+const grantSchemas = Object.keys(SCHEMA_MAP);
+const grantSql = grantSchemas.map(s => `
+  GRANT USAGE ON SCHEMA "${s}" TO anon, authenticated, service_role;
+  GRANT ALL ON ALL TABLES IN SCHEMA "${s}" TO anon, authenticated, service_role;
+  GRANT ALL ON ALL SEQUENCES IN SCHEMA "${s}" TO anon, authenticated, service_role;
+  GRANT ALL ON ALL FUNCTIONS IN SCHEMA "${s}" TO anon, authenticated, service_role;
+  ALTER DEFAULT PRIVILEGES IN SCHEMA "${s}" GRANT ALL ON TABLES TO anon, authenticated, service_role;
+  ALTER DEFAULT PRIVILEGES IN SCHEMA "${s}" GRANT ALL ON SEQUENCES TO anon, authenticated, service_role;
+`).join('\n');
+const grantRes = psql(grantSql);
+if (grantRes.status !== 0) {
+  console.error('[03] GRANT failed:', grantRes.stderr);
+  process.exit(1);
+}
+console.log('[03] privileges granted');
+
 // Verify: count tables in each new schema
 const verify = spawnSync('psql', [
   process.env.MASTER_PG_URL,

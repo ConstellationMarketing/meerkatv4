@@ -146,7 +146,7 @@ app.post('/batch/start', async (req, res) => {
       });
     }
 
-    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY, { db: { schema: "meerkat" } });
 
     // Resolve clientInfo, website, clientId from client_folders. Fetch ALL
     // folders so we can fuzzy-match user-supplied names against the canonical
@@ -356,7 +356,7 @@ app.post('/batch/retry', async (req, res) => {
   }
 
   try {
-    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+    const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY, { db: { schema: "meerkat" } });
     const { data: job } = await supabase.from('batch_jobs').select('csv_data, errors').eq('batch_id', batchId).single();
 
     if (!job || !job.errors || job.errors.length === 0) {

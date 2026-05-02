@@ -17,7 +17,8 @@ let _supabase = null;
 function getSupabase() {
   if (!_supabase) {
     _supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY, {
-      auth: { autoRefreshToken: false, persistSession: false }
+      auth: { autoRefreshToken: false, persistSession: false },
+      db: { schema: 'meerkat' },
     });
   }
   return _supabase;
@@ -419,8 +420,10 @@ router.delete('/delete-user-cascade', async (req, res) => {
     // change in meerkatv3 netlify/functions/delete-user-cascade.ts. Templates
     // are shared team resources, not user-owned data; deleting them with the
     // user causes silent data loss for everyone else.
+    // webhook_logs is intentionally absent — that table was deprecated and not
+    // migrated to master. See scripts/migration/config.js SKIP_REASONS.
     const tables = ['team_members', 'article_outlines', 'article_comments', 'article_revisions',
-                     'article_access', 'public_shares', 'client_folders', 'webhook_logs'];
+                     'article_access', 'public_shares', 'client_folders'];
 
     for (const table of tables) {
       try {

@@ -369,75 +369,57 @@ router.delete('/public-shares', async (req, res) => {
 });
 
 // ─── /api/delete-user ───────────────────────────────────────────────────────
+// REMOVES a user from Meerkat (deletes their team_members row only).
+// Does NOT delete the underlying auth.users record — that's shared across
+// every Constellation OS app, so deleting here would lock them out of every
+// other tool. Articles + comments stay intact (orphaned attribution is fine;
+// data preservation is not optional). Renamed semantics from the pre-cutover
+// behavior; see git blame for the destructive original.
 router.delete('/delete-user', async (req, res) => {
   const { email, userId } = req.body;
   if (!email && !userId) return res.status(400).json({ error: 'Must provide email or userId' });
 
   try {
     const supabase = getSupabase();
-    let userToDelete = null;
+    let target = null;
 
     if (userId) {
       const { data, error } = await supabase.auth.admin.getUserById(userId);
       if (error || !data?.user) return res.status(404).json({ error: 'User not found' });
-      userToDelete = data.user;
+      target = data.user;
     } else {
       const { data } = await supabase.auth.admin.listUsers();
-      userToDelete = data?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase());
-      if (!userToDelete) return res.status(404).json({ error: 'User not found' });
+      target = data?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase());
+      if (!target) return res.status(404).json({ error: 'User not found' });
     }
 
-    const { error } = await supabase.auth.admin.deleteUser(userToDelete.id);
+    const { error } = await supabase.from('team_members').delete().eq('user_id', target.id);
     if (error) return res.status(500).json({ error: error.message });
 
-    res.json({ success: true, deletedUser: { id: userToDelete.id, email: userToDelete.email } });
+    res.json({
+      success: true,
+      removedFromMeerkat: { id: target.id, email: target.email },
+      note: 'auth.users record preserved (shared across Constellation OS apps).',
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 // ─── /api/delete-user-cascade ───────────────────────────────────────────────
+// DISABLED 2026-05-06. Previously hard-deleted auth.users + cascaded into
+// article_outlines, comments, etc. After the master DB cutover that's
+// catastrophically destructive — auth.users is shared with every other
+// Constellation OS app, and cascading destroys article history.
+// Use /api/delete-user (above) — removes from meerkat.team_members only.
+// To truly purge a user across all OS apps, do it in the Supabase dashboard
+// with full awareness of the blast radius.
 router.delete('/delete-user-cascade', async (req, res) => {
-  const { email, userId } = req.body;
-  if (!email && !userId) return res.status(400).json({ error: 'Must provide email or userId' });
-
-  try {
-    const supabase = getSupabase();
-    let userToDelete = null;
-
-    if (userId) {
-      const { data, error } = await supabase.auth.admin.getUserById(userId);
-      if (error || !data?.user) return res.status(404).json({ error: 'User not found' });
-      userToDelete = data.user;
-    } else {
-      const { data } = await supabase.auth.admin.listUsers();
-      userToDelete = data?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase());
-      if (!userToDelete) return res.status(404).json({ error: 'User not found' });
-    }
-
-    const uid = userToDelete.id;
-    // `templates` intentionally omitted from this cascade — see the matching
-    // change in meerkatv3 netlify/functions/delete-user-cascade.ts. Templates
-    // are shared team resources, not user-owned data; deleting them with the
-    // user causes silent data loss for everyone else.
-    // webhook_logs is intentionally absent — that table was deprecated and not
-    // migrated to master. See scripts/migration/config.js SKIP_REASONS.
-    const tables = ['team_members', 'article_outlines', 'article_comments', 'article_revisions',
-                     'article_access', 'public_shares', 'client_folders'];
-
-    for (const table of tables) {
-      try {
-        await supabase.from(table).delete().eq('user_id', uid);
-      } catch {}
-    }
-
-    const { error } = await supabase.auth.admin.deleteUser(uid);
-    if (error) return res.status(500).json({ error: error.message });
-
-    res.json({ success: true, deletedUser: { id: uid, email: userToDelete.email } });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  return res.status(410).json({
+    error: 'Endpoint disabled.',
+    reason: 'Hard-deleted auth.users (shared across all Constellation OS apps) and cascade-destroyed articles.',
+    use_instead: 'DELETE /api/delete-user (removes from meerkat.team_members only).',
+  });
 });
 
 // ─── GET /get-article (was /.netlify/functions/get-article) ─────────────────

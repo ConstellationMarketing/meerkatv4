@@ -1,0 +1,11 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Update version in package.json
+node scripts/update-version.js
+
+# Stage the package.json change
+git add package.json
+
+# Amend the last commit with the version bump
+git commit --amend --no-edit package.json 2>/dev/null || true

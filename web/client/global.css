@@ -1,0 +1,371 @@
+/** @import must precede all other statements */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /**
+   * Tailwind CSS theme
+   * tailwind.config.ts expects the following color variables to be expressed as HSL values.
+   * A different format will require also updating the theme in tailwind.config.ts.
+  */
+  :root {
+    /* Light Mode - Design System Colors */
+    --background: 16 11% 97%; /* #faf6f6 - Off White */
+    --foreground: 210 70% 18%; /* #0E3057 - Primary Dark */
+
+    --card: 0 0% 100%; /* #ffffff - Pure White */
+    --card-foreground: 210 70% 18%; /* #0E3057 - Primary Dark */
+
+    --popover: 0 0% 100%; /* #ffffff - Pure White */
+    --popover-foreground: 210 70% 18%; /* #0E3057 - Primary Dark */
+
+    --primary: 154 44% 52%; /* #4fbc85 - Primary Green */
+    --primary-foreground: 0 0% 100%; /* #ffffff - White */
+
+    --secondary: 240 5% 95%; /* #f3f4f4 - Light Gray */
+    --secondary-foreground: 210 70% 18%; /* #0E3057 - Primary Dark */
+
+    --muted: 240 5% 95%; /* #f3f4f4 - Muted Background */
+    --muted-foreground: 215 16% 47%; /* #687684 - Muted Text */
+
+    --accent: 154 55% 68%; /* #78d5a5 - Light Green Accent */
+    --accent-foreground: 210 70% 18%; /* #0E3057 - Primary Dark */
+
+    --destructive: 0 84% 60%; /* #e74c3c - Error/Destructive */
+    --destructive-foreground: 0 0% 100%; /* #ffffff - White */
+
+    --border: 240 6% 90%; /* #e5e7e8 - Border Gray */
+    --input: 240 6% 90%; /* #e5e7e8 - Input Border */
+    --ring: 154 44% 52%; /* #4fbc85 - Focus Ring (matches primary) */
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 0 0% 98%; /* #fafafa - Very Light Gray */
+    --sidebar-foreground: 240 5.3% 26.1%; /* #3f4247 - Dark Gray */
+    --sidebar-primary: 240 5.9% 10%; /* #18191b - Almost Black */
+    --sidebar-primary-foreground: 0 0% 98%; /* #fafafa - Very Light Gray */
+    --sidebar-accent: 240 4.8% 95.9%; /* #f4f4f5 - Light Gray */
+    --sidebar-accent-foreground: 240 5.9% 10%; /* #18191b - Almost Black */
+    --sidebar-border: 220 13% 91%; /* #e3e8ec - Light Border */
+    --sidebar-ring: 217.2 91.2% 59.8%; /* #3b82f6 - Blue Ring */
+  }
+
+  .dark {
+    /* Dark Mode - Design System Colors */
+    --background: 222.2 84% 4.9%; /* #020817 - Very Dark Blue */
+    --foreground: 210 40% 98%; /* #f8fafc - Almost White */
+
+    --card: 222.2 84% 4.9%; /* #020817 - Very Dark Blue */
+    --card-foreground: 210 40% 98%; /* #f8fafc - Almost White */
+
+    --popover: 222.2 84% 4.9%; /* #020817 - Very Dark Blue */
+    --popover-foreground: 210 40% 98%; /* #f8fafc - Almost White */
+
+    --primary: 210 40% 98%; /* #f8fafc - Almost White (inverted) */
+    --primary-foreground: 222.2 47.4% 11.2%; /* #0f172a - Very Dark */
+
+    --secondary: 217.2 32.6% 17.5%; /* #1e293b - Dark Slate */
+    --secondary-foreground: 210 40% 98%; /* #f8fafc - Almost White */
+
+    --muted: 217.2 32.6% 17.5%; /* #1e293b - Dark Slate */
+    --muted-foreground: 215 20.2% 65.1%; /* #94a3b8 - Light Slate */
+
+    --accent: 217.2 32.6% 17.5%; /* #1e293b - Dark Slate */
+    --accent-foreground: 210 40% 98%; /* #f8fafc - Almost White */
+
+    --destructive: 0 62.8% 30.6%; /* #991b1b - Dark Red */
+    --destructive-foreground: 210 40% 98%; /* #f8fafc - Almost White */
+
+    --border: 217.2 32.6% 17.5%; /* #1e293b - Dark Slate */
+    --input: 217.2 32.6% 17.5%; /* #1e293b - Dark Slate */
+    --ring: 212.7 26.8% 83.9%; /* #cbd5e1 - Light Blue Gray */
+
+    --sidebar-background: 240 5.9% 10%; /* #18191b - Almost Black */
+    --sidebar-foreground: 240 4.8% 95.9%; /* #f4f4f5 - Light Gray */
+    --sidebar-primary: 224.3 76.3% 48%; /* #3b82f6 - Blue */
+    --sidebar-primary-foreground: 0 0% 100%; /* #ffffff - White */
+    --sidebar-accent: 240 3.7% 15.9%; /* #27272a - Dark Gray */
+    --sidebar-accent-foreground: 240 4.8% 95.9%; /* #f4f4f5 - Light Gray */
+    --sidebar-border: 240 3.7% 15.9%; /* #27272a - Dark Gray */
+    --sidebar-ring: 217.2 91.2% 59.8%; /* #3b82f6 - Blue Ring */
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  :where(p, span, li, h1, h2, h3, h4, h5, h6, a, button, label, td, th) {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  pre,
+  code {
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  /* Consistent link styling in contenteditable areas */
+  [contenteditable] a,
+  [contenteditable] a * {
+    color: #0066cc !important;
+    text-decoration: underline !important;
+    font-weight: 500 !important;
+    cursor: pointer;
+  }
+
+  /* Header sizing in contenteditable areas */
+  [contenteditable] h1 {
+    font-size: 2.25rem;
+    font-weight: 700;
+    margin: 0.5rem 0;
+  }
+
+  [contenteditable] h2 {
+    font-size: 1.875rem;
+    font-weight: 700;
+    margin: 0.5rem 0;
+  }
+
+  [contenteditable] h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0.5rem 0;
+  }
+
+  [contenteditable] h4 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0.5rem 0;
+  }
+
+  [contenteditable] h5 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0.5rem 0;
+  }
+
+  [contenteditable] h6 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0.5rem 0;
+  }
+}
+
+@layer components {
+  [contenteditable] .meerkat-block-label {
+    position: relative;
+  }
+
+  [contenteditable] .meerkat-block-label::before {
+    content: attr(data-block-label);
+    position: absolute;
+    left: -2.25rem;
+    top: 0.15rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 9999px;
+    font-size: 0.65rem;
+    line-height: 1;
+    background-color: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+    border: 1px solid hsl(var(--border));
+    min-width: 1.5rem;
+    text-align: center;
+  }
+
+  /* TipTap Editor Styles */
+  .tiptap {
+    outline: none;
+    min-height: 100%;
+  }
+
+  .tiptap p.is-editor-empty:first-child::before {
+    color: hsl(var(--muted-foreground));
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  }
+
+  .tiptap h1 {
+    font-size: 2.25rem;
+    font-weight: 700;
+    margin: 1.5rem 0 1rem;
+    line-height: 1.2;
+  }
+
+  .tiptap h1:first-child {
+    margin-top: 0;
+  }
+
+  .tiptap h2 {
+    font-size: 1.875rem;
+    font-weight: 700;
+    margin: 1.5rem 0 1rem;
+    line-height: 1.3;
+  }
+
+  .tiptap h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 1.25rem 0 0.75rem;
+    line-height: 1.4;
+  }
+
+  .tiptap h4 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 1rem 0 0.75rem;
+    line-height: 1.4;
+  }
+
+  .tiptap h5 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 1rem 0 0.75rem;
+    line-height: 1.5;
+  }
+
+  .tiptap p {
+    margin: 1.5rem 0 !important;
+    line-height: 1.65;
+  }
+
+  /* Prose class overrides for paragraph spacing */
+  .prose p {
+    margin: 1.5rem 0 !important;
+  }
+
+  .prose-sm p {
+    margin: 1.5rem 0 !important;
+  }
+
+  .prose-lg p {
+    margin: 1.5rem 0 !important;
+  }
+
+  .prose-xl p {
+    margin: 1.5rem 0 !important;
+  }
+
+  .tiptap ul,
+  .tiptap ol {
+    padding-left: 2rem !important;
+    margin: 0.5rem 0 !important;
+  }
+
+  .tiptap ul {
+    list-style-type: disc !important;
+    list-style-position: outside !important;
+  }
+
+  .tiptap ol {
+    list-style-type: decimal !important;
+    list-style-position: outside !important;
+  }
+
+  .tiptap ul li,
+  .tiptap ol li {
+    margin: 0.25rem 0 !important;
+    display: list-item !important;
+    list-style-type: inherit !important;
+  }
+
+  /* Override prose list styles that might conflict */
+  .prose ul,
+  .prose ol {
+    padding-left: 2rem !important;
+    margin: 0.5rem 0 !important;
+    list-style-type: unset !important;
+  }
+
+  .prose ul {
+    list-style-type: disc !important;
+  }
+
+  .prose ol {
+    list-style-type: decimal !important;
+  }
+
+  .prose ul li,
+  .prose ol li {
+    margin: 0.25rem 0 !important;
+    display: list-item !important;
+  }
+
+  /* Reset any prose utility classes that might hide lists */
+  .prose :where(ul, ol):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+    list-style-type: unset !important;
+  }
+
+  .prose :where(ul):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+    list-style-type: disc !important;
+  }
+
+  .prose :where(ol):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+    list-style-type: decimal !important;
+  }
+
+  /* Maximum specificity overrides for lists */
+  [contenteditable] ul {
+    list-style-type: disc !important;
+    list-style-position: outside !important;
+  }
+
+  [contenteditable] ol {
+    list-style-type: decimal !important;
+    list-style-position: outside !important;
+  }
+
+  [contenteditable] li {
+    display: list-item !important;
+    list-style-type: inherit !important;
+  }
+
+  .tiptap a {
+    color: hsl(var(--primary));
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  .tiptap a:hover {
+    opacity: 0.8;
+  }
+
+  .tiptap strong {
+    font-weight: 700;
+  }
+
+  .tiptap em {
+    font-style: italic;
+  }
+
+  .tiptap u {
+    text-decoration: underline;
+  }
+
+  .tiptap code {
+    background-color: hsl(var(--muted));
+    padding: 0.125rem 0.25rem;
+    border-radius: 0.25rem;
+    font-family: monospace;
+    font-size: 0.875em;
+  }
+
+  .tiptap blockquote {
+    border-left: 3px solid hsl(var(--border));
+    padding-left: 1rem;
+    margin: 1rem 0;
+    font-style: italic;
+    color: hsl(var(--muted-foreground));
+  }
+}

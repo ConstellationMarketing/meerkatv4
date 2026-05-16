@@ -1,0 +1,71 @@
+[build]
+  command = "pnpm run build:client"
+  functions = "netlify/functions"
+  publish = "dist/spa"
+
+[build.environment]
+  NPM_FLAGS = "--version"
+  VITE_SUPABASE_URL = "https://cwligyakhxevopxiksdm.supabase.co"
+
+[functions]
+  external_node_modules = ["express"]
+  node_bundler = "esbuild"
+  
+[[redirects]]
+  force = true
+  from = "/api/webhook*"
+  status = 200
+  to = "/.netlify/functions/webhook-handler"
+
+[[redirects]]
+  force = true
+  from = "/api/team-members"
+  status = 200
+  to = "/.netlify/functions/team-members"
+
+[[redirects]]
+  force = true
+  from = "/api/delete-user"
+  status = 200
+  to = "/.netlify/functions/delete-user"
+
+[[redirects]]
+  force = true
+  from = "/api/delete-user-cascade"
+  status = 200
+  to = "/.netlify/functions/delete-user-cascade"
+
+[[redirects]]
+  force = true
+  from = "/api/article-access"
+  status = 200
+  to = "/.netlify/functions/article-access"
+
+[[redirects]]
+  force = true
+  from = "/api/comments"
+  status = 200
+  to = "/.netlify/functions/comments"
+
+[[redirects]]
+  force = true
+  from = "/api/send-to-webhook"
+  status = 200
+  to = "/.netlify/functions/send-to-webhook"
+
+[[redirects]]
+  force = true
+  from = "/api/chat"
+  status = 200
+  to = "/.netlify/functions/chat"
+
+[[redirects]]
+  force = true
+  from = "/api/*"
+  status = 200
+  to = "/.netlify/functions/api/:splat"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

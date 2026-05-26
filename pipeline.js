@@ -10,7 +10,7 @@ const { scoreArticle } = require('./lib/scoring');
 const { upsertArticle } = require('./lib/supabase');
 const { publishArticle } = require('./lib/github-publish');
 const { checkAndFixFormat } = require('./lib/format-checker');
-const { checkCrossArticleDuplicates } = require('./lib/cross-article-dupe-check');
+const { checkCrossArticleDuplicates, getPriorClientPhrases } = require('./lib/cross-article-dupe-check');
 const { repairStructuralIssues } = require('./lib/structural-repair');
 
 const client = new Anthropic();
@@ -638,6 +638,16 @@ async function generateSection(payload, section) {
 
   const { system, user } = parsePrompt(prompts['section-writer'], vars);
 
+  // Cross-article dedup prevention: when CROSS_ARTICLE_DEDUP_PREVENT is on,
+  // payload.priorPhrases carries sentences from this client's last 3 articles.
+  // Append them as a "do not reuse verbatim" block so the model varies
+  // phrasing at generation time rather than us catching repeats post-hoc.
+  let priorPhrasesBlock = '';
+  if (payload.priorPhrases && payload.priorPhrases.length) {
+    const bulleted = payload.priorPhrases.map(s => `- ${s}`).join('\n');
+    priorPhrasesBlock = `\n\n## RECENTLY USED PHRASES FOR THIS CLIENT — DO NOT REUSE VERBATIM\n\nThe sentences below have already appeared in recent articles for ${payload.clientName || 'this client'}. Do not use them verbatim or near-verbatim in this section. Vary the wording substantially, choose different facts/examples, or omit the point entirely if a varied alternative would feel forced. This is critical — editors flag repeated boilerplate as a quality issue.\n\n${bulleted}`;
+  }
+
   let lastOutput = null;
   let lastScore = null;
   let lastWordCount = null;
@@ -647,7 +657,7 @@ async function generateSection(payload, section) {
   const minWords = targetWords ? Math.floor(targetWords * 0.8) : null;
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-    let userMsg = user;
+    let userMsg = user + priorPhrasesBlock;
     if (attempt > 0) {
       const issues = [];
       if (lastScore !== null && lastScore < 70) {
@@ -710,11 +720,24 @@ async function runPipeline(payload) {
 
   console.log(`[Pipeline] Starting: articleId=${articleId}, keyword="${keyword}", sections=${sections.length}`);
 
+  // Cross-article dedup prevention: fetch this client's recent phrases once,
+  // pass to every parallel section call. No-op (returns []) unless
+  // CROSS_ARTICLE_DEDUP_PREVENT=1 in env.
+  let priorPhrases = [];
+  try {
+    priorPhrases = await getPriorClientPhrases(clientName, articleId);
+    if (priorPhrases.length) {
+      console.log(`[Pipeline] Dedup prevention: ${priorPhrases.length} prior-article phrases will be injected into section prompts`);
+    }
+  } catch (e) {
+    console.warn('[Pipeline] getPriorClientPhrases threw — skipping:', e.message);
+  }
+
   // ─── 1. Parallel section generation ───────────────────────────────────────
   console.log(`[Pipeline] Generating ${sections.length} sections in parallel...`);
   const sectionResults = await Promise.all(
     sections.map(section =>
-      generateSection({ articleId, clientId, clientName, clientInfo, website, keyword, template }, section)
+      generateSection({ articleId, clientId, clientName, clientInfo, website, keyword, template, priorPhrases }, section)
         .catch(err => {
           console.error(`Section ${section.sectionNumber} failed:`, err.message);
           return { output: `[Section ${section.sectionNumber} generation failed]`, fleschScore: 0, sectionNumber: section.sectionNumber };

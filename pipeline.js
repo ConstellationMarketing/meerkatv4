@@ -10,6 +10,7 @@ const { scoreArticle } = require('./lib/scoring');
 const { upsertArticle } = require('./lib/supabase');
 const { publishArticle } = require('./lib/github-publish');
 const { checkAndFixFormat } = require('./lib/format-checker');
+const { checkCrossArticleDuplicates } = require('./lib/cross-article-dupe-check');
 const { repairStructuralIssues } = require('./lib/structural-repair');
 
 const client = new Anthropic();
@@ -987,6 +988,16 @@ async function runPipeline(payload) {
   }
   if (!hasStatutes) {
     formatResult.warnings.push('REQUIRED: No jurisdiction-specific statute citations — pipeline repair failed, editor must add at least one');
+  }
+
+  // Cross-article duplicate check (gated by CROSS_ARTICLE_DUPE_CHECK env var,
+  // default off). Surfaces verbatim/near-verbatim sentences shared with recent
+  // articles for the same client — the May 2026 Dostart/Sabbeth pattern.
+  try {
+    const dupeWarnings = await checkCrossArticleDuplicates(cleanedContent, clientName, articleId);
+    dupeWarnings.forEach(w => formatResult.warnings.push(w));
+  } catch (e) {
+    console.warn('[Pipeline] cross-article dupe check threw — skipping:', e.message);
   }
 
   if (formatResult.warnings.length > 0) {

@@ -11,6 +11,14 @@
   external_node_modules = ["express"]
   node_bundler = "esbuild"
   
+# /health → Netlify Function for the OS Health Check Bot. Must sit above
+# the /* SPA fallback or the probe gets HTML instead of JSON.
+[[redirects]]
+  force = true
+  from = "/health"
+  status = 200
+  to = "/.netlify/functions/health"
+
 [[redirects]]
   force = true
   from = "/api/webhook*"
